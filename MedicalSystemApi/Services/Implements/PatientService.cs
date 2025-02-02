@@ -43,6 +43,11 @@ namespace MedicalSystemApi.Services.Implements
 
             // التحقق من صحة البيانات
 
+            if (string.IsNullOrWhiteSpace(createPatientDto.FullName))
+            {
+                throw new ArgumentException("Full Name cannot be null or empty.");
+            }
+
             if (!await _patientRepository.IsPhoneNumberValid(createPatientDto.Phone))
             {
                 throw new InvalidOperationException("Invalid Phone Number!");
@@ -61,6 +66,11 @@ namespace MedicalSystemApi.Services.Implements
 
             var patient = await _patientRepository.GetByIdAsync(id) ??
                 throw new KeyNotFoundException("Patient not found");
+
+            if (string.IsNullOrWhiteSpace(updatePatientDto.FullName))
+            {
+                throw new ArgumentException("Full Name cannot be null or empty.");
+            }
 
             if (!await _patientRepository.IsPhoneNumberValid(updatePatientDto.Phone))
             {

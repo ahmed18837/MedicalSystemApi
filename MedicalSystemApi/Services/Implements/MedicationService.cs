@@ -42,6 +42,10 @@ namespace MedicalSystemApi.Services.Implements
             if (createMedicationDto == null) throw new ArgumentNullException("Input data cannot be null");
 
             // التحقق من صحة البيانات
+            if (string.IsNullOrWhiteSpace(createMedicationDto.Name))
+            {
+                throw new ArgumentException("Name cannot be null or empty.");
+            }
             if (!await _medicationRepository.MedicalRecordIdExistsAsync(createMedicationDto.MedicalRecordId))
                 throw new KeyNotFoundException("MedicalRecord not found!");
 
@@ -56,6 +60,11 @@ namespace MedicalSystemApi.Services.Implements
 
             var medication = await _medicationRepository.GetByIdAsync(id) ??
                 throw new KeyNotFoundException("Medication not found");
+
+            if (string.IsNullOrWhiteSpace(updateMedicationDto.Name))
+            {
+                throw new ArgumentException("Name cannot be null or empty.");
+            }
 
             if (!await _medicationRepository.MedicalRecordIdExistsAsync(updateMedicationDto.MedicalRecordId))
                 throw new KeyNotFoundException("MedicalRecord not found!");

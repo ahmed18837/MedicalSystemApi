@@ -34,6 +34,27 @@ builder.Services.AddScoped<IMedicationService, MedicationService>();
 
 builder.Services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
 builder.Services.AddScoped<IMedicalRecordService, MedicalRecordService>();
+
+builder.Services.AddScoped<IMedicalTestRepository, MedicalTestRepository>();
+builder.Services.AddScoped<IMedicalTestService, MedicalTestService>();
+
+builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
+builder.Services.AddScoped<IDoctorService, DoctorService>();
+
+builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+
+builder.Services.AddScoped<IBillRepository, BillRepository>();
+builder.Services.AddScoped<IBillService, BillService>();
+
+builder.Services.AddScoped<IBillMedicalTestRepository, BillMedicalTestRepository>();
+builder.Services.AddScoped<IBillMedicalTestService, BillMedicalTestService>();
+
+builder.Services.AddScoped<IBillItemRepository, BillItemRepository>();
+builder.Services.AddScoped<IBillItemService, BillItemService>();
+
+builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 // Register AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 

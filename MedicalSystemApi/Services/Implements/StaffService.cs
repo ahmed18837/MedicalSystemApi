@@ -22,19 +22,19 @@ namespace MedicalSystemApi.Services.Implements
             var staffList = await _staffRepository.GetAllWithDepartmentAsync() ??
                 throw new Exception("There are not Staffs!");
 
-            //var staffListDto = _mapper.Map<IEnumerable<StaffDto>>(staffList); // ابطىء نسبيا ولكن سهل فى التعديل
-            //return staffListDto;
+            var staffListDto = _mapper.Map<IEnumerable<StaffDto>>(staffList); // ابطىء نسبيا ولكن سهل فى التعديل
+            return staffListDto;
 
-            return staffList.Select(s => new StaffDto // اسرع ولكن صعب فى التعديل
-            {
-                Id = s.Id,
-                FullName = s.FullName,
-                RoleStaff = s.RoleStaff,
-                Phone = s.Phone,
-                Email = s.Email,
-                HireDate = s.HireDate,
-                DepartmentName = s.Department?.Name ?? "Unknown" // جلب اسم القسم فقط
-            }).ToList();
+            //return staffList.Select(s => new StaffDto // اسرع ولكن صعب فى التعديل
+            //{
+            //    Id = s.Id,
+            //    FullName = s.FullName,
+            //    RoleStaff = s.RoleStaff,
+            //    Phone = s.Phone,
+            //    Email = s.Email,
+            //    HireDate = s.HireDate,
+            //    DepartmentName = s.Department?.Name ?? "Unknown" // جلب اسم القسم فقط
+            //}).ToList();
         }
 
         public async Task<StaffDto> GetByIdAsync(int id)
