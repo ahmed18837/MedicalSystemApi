@@ -1,4 +1,5 @@
 ﻿using MedicalSystemApi.Models.DTOs.Bill;
+using MedicalSystemApi.Models.Entities;
 using MedicalSystemApi.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -97,6 +98,39 @@ namespace MedicalSystemApi.Controllers
             catch (Exception ex)
             {
                 return Content(ex.Message);// 404 Not Found
+            }
+        }
+
+        [HttpGet("patient/{patientId}")]
+        public async Task<ActionResult<Bill>> GetBillsByPatient(int patientId)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var billDto = await _billService.GetBillsByPatientIdAsync(patientId);
+                return Ok(billDto);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("update-total/{billId}")]
+        public async Task<IActionResult> UpdateTotalAmount(int billId, [FromBody] decimal newTotalAmount)
+        {
+            try
+            {
+                await _billService.UpdateTotalAmountAsync(billId, newTotalAmount);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
         }
     }

@@ -14,7 +14,7 @@ namespace MedicalSystemApi.Repository.Implement
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Staff>> GetAllWithDepartmentAsync()
+        public async Task<IEnumerable<Staff>> GetAllWithDepartmentNameAsync()
         {
             return await _dbContext.Staffs
              .AsNoTracking()
@@ -68,6 +68,87 @@ namespace MedicalSystemApi.Repository.Implement
         {
             return await _dbContext.Staffs
                 .AnyAsync(p => p.Phone == phoneNumber);
+        }
+
+        public async Task<IEnumerable<Staff>> GetStaffByDepartmentAsync(int departmentId)
+        {
+            return await _dbContext.Staffs
+                .Include(s => s.Department)
+                .Where(s => s.DepartmentId == departmentId)
+                .ToListAsync();
+        }
+
+        public async Task<Dictionary<string, int>> GetStaffCountByRoleAsync()
+        {
+            var staffCountList = await _dbContext.Staffs
+                .AsNoTracking()
+                .GroupBy(s => s.RoleStaff)
+                .Select(g => new { Role = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            return staffCountList.ToDictionary(x => x.Role, x => x.Count);
+        }
+
+        public async Task<Dictionary<string, int>> GetStaffCountByDepartmentAsync()
+        {
+            var staffCountList = await _dbContext.Staffs
+                .AsNoTracking()
+                .GroupBy(s => s.Department.Name)
+                .Select(g => new { DepartmentName = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            return staffCountList.ToDictionary(x => x.DepartmentName, x => x.Count);
+        }
+
+        public async Task<int> GetYearsOfServiceAsync(int id)
+        {
+            var staff = await _dbContext.Staffs.FindAsync(id);
+            if (staff == null) return -1;
+
+            return DateTime.Now.Year - staff.HireDate.Year;
+        }
+
+        public async Task<Staff> SearchWithPhoneStaffAsync(string phone)
+        {
+            return await _dbContext.Staffs
+               .Include(s => s.Department)
+               .AsNoTracking()
+               .FirstOrDefaultAsync(s => s.Phone == phone);
+        }
+
+        public async Task<Staff> SearchWithEmailStaffAsync(string email)
+        {
+            return await _dbContext.Staffs
+               .Include(s => s.Department)
+               .AsNoTracking()
+               .FirstOrDefaultAsync(s => s.Email == email);
+        }
+
+        public async Task<bool> StaffIdExistsAsync(int staffId)
+        {
+            return await _dbContext.Staffs.AnyAsync(s => s.Id == staffId);
+        }
+
+        public async Task<bool> RoleStaffExistsAsync(string roleStaff)
+        {
+            return await _dbContext.Staffs.AnyAsync(s => s.RoleStaff.ToUpper() == roleStaff.ToUpper());
+        }
+
+        public async Task UpdateStaffRoleOrDepartmentAsync(int staffId, string? roleStaff, int? departmentId)
+        {
+            var staff = await _dbContext.Staffs.FirstOrDefaultAsync(s => s.Id == staffId) ??
+                 throw new KeyNotFoundException("Staff member not found");
+
+            if (!string.IsNullOrWhiteSpace(roleStaff))
+            {
+                staff.RoleStaff = roleStaff;
+            }
+            if (departmentId.HasValue)
+            {
+                staff.DepartmentId = departmentId.Value;
+            }
+            _dbContext.Update(staff);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

@@ -8,5 +8,8 @@ namespace MedicalSystemApi.Repository.Interfaces
         Task<MedicalRecord> GetMedicalRecordWithDoctorName(int id);
         Task<bool> PatientIdExistsAsync(int id);
         Task<bool> DoctorIdExistsAsync(int id);
+
+        Task<bool> UpdateDiagnosisAndPrescriptions(int recordId, string diagnosis, string prescriptions);
+        Task<IEnumerable<MedicalRecord>> GetMedicalHistoryByPatientIdAndDoctorId(int patientId, int doctorId);
     }
 }

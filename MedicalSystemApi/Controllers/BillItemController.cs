@@ -99,5 +99,34 @@ namespace MedicalSystemApi.Controllers
                 return Content(ex.Message);// 404 Not Found
             }
         }
+
+        [HttpGet("bill/{billId}")]
+        public async Task<IActionResult> GetBillItemsByBillId(int billId)
+        {
+            try
+            {
+                var billItems = await _billItemService.GetBillItemsByBillIdAsync(billId);
+                return Ok(billItems); // 204 No Content
+            }
+            catch (Exception ex)
+            {
+                return Content(ex.Message);// 404 Not Found
+            }
+        }
+
+        [HttpPut("update-price/{billItemId}")]
+        public async Task<IActionResult> UpdateBillItemPrice(int billItemId, decimal unitPrice, int quantity)
+        {
+            try
+            {
+                await _billItemService.UpdateBillItemPriceAsync(billItemId, unitPrice, quantity);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
     }
 }

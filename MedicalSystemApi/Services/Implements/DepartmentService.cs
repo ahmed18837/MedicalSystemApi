@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using MedicalSystemApi.Models.DTOs.Department;
+using MedicalSystemApi.Models.DTOs.Doctor;
 using MedicalSystemApi.Models.Entities;
 using MedicalSystemApi.Repository.Interfaces;
 using MedicalSystemApi.Services.Interfaces;
@@ -9,11 +10,13 @@ namespace MedicalSystemApi.Services.Implements
     public class DepartmentService : IDepartmentService
     {
         private readonly IDepartmentRepository _departmentRepository;
+        private readonly IDoctorRepository _doctorRepository;
         private readonly IMapper _mapper;
 
-        public DepartmentService(IDepartmentRepository departmentRepository, IMapper mapper)
+        public DepartmentService(IDepartmentRepository departmentRepository, IDoctorRepository doctorRepository, IMapper mapper)
         {
             _departmentRepository = departmentRepository;
+            _doctorRepository = doctorRepository;
             _mapper = mapper;
         }
 
@@ -64,6 +67,38 @@ namespace MedicalSystemApi.Services.Implements
             var department = await _departmentRepository.GetByIdAsync(id) ??
                throw new KeyNotFoundException("Department not found");
             await _departmentRepository.DeleteAsync(id);
+        }
+
+        public async Task<IEnumerable<DoctorDto>> GetDoctorsByDepartmentIdAsync(int departmentId)
+        {
+            if (departmentId <= 0)
+            {
+                throw new ArgumentException("Invalid Department ID.");
+            }
+
+            var doctors = await _departmentRepository.GetDoctorsByDepartmentIdAsync(departmentId);
+
+            if (!doctors.Any())
+            {
+                throw new KeyNotFoundException($"No doctors found for Department ID {departmentId}");
+            }
+
+            var doctorsDto = _mapper.Map<IEnumerable<DoctorDto>>(doctors);
+            return doctorsDto;
+        }
+
+        public async Task RemoveDoctorFromDepartmentAsync(int departmentId, int doctorId)
+        {
+            if (departmentId <= 0 || doctorId <= 0)
+                throw new ArgumentException("Invalid Department ID or Doctor ID.");
+
+            var doctor = await _doctorRepository.GetByIdAsync(doctorId);
+            if (doctor == null || doctor.DepartmentId != departmentId)
+                throw new KeyNotFoundException($"Doctor with ID {doctorId} is not part of Department {departmentId}");
+
+            bool success = await _departmentRepository.RemoveDoctorFromDepartmentAsync(departmentId, doctorId);
+            if (!success)
+                throw new Exception("Failed to remove doctor from department");
         }
     }
 }

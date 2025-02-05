@@ -60,5 +60,51 @@ namespace MedicalSystemApi.Repository.Implement
             return await _dbContext.Doctors
                .AnyAsync(p => p.Phone == phoneNumber);
         }
+
+        public async Task<IEnumerable<Doctor>> GetDoctorsBySpecialty(string specialty)
+        {
+            return await _dbContext.Doctors
+                .AsNoTracking()
+                .Include(d => d.Department)
+                .Where(d => d.Specialty.ToLower() == specialty.ToLower())
+                .ToListAsync(); // Return full Doctor entity
+        }
+
+        public async Task<IEnumerable<Doctor>> GetAvailableDoctorsToDay()
+        {
+            var today = DateTime.Now.Date;
+
+            return await _dbContext.Doctors
+                .AsNoTracking()
+                .Include(d => d.Department)
+                .Where(d => d.Appointments!.Any(a => a.Date.Date == today))
+                .ToListAsync();
+        }
+
+        public async Task<bool> AssignDoctorToDepartment(int doctorId, int departmentId)
+        {
+            var doctor = await _dbContext.Doctors.FindAsync(doctorId);
+            if (doctor == null) return false;
+
+            var department = await _dbContext.Departments.FindAsync(departmentId);
+            if (department == null) return false;
+
+            doctor.DepartmentId = departmentId;
+
+            _dbContext.Doctors.Update(doctor);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdateDoctorWorkingHoursAsync(int doctorId, string newWorkingHours)
+        {
+            var doctor = await _dbContext.Doctors.FindAsync(doctorId);
+            if (doctor == null) return false; // Doctor not found
+
+            doctor.WorkingHours = newWorkingHours;
+            _dbContext.Doctors.Update(doctor);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
     }
 }

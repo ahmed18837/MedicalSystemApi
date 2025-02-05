@@ -78,5 +78,32 @@ namespace MedicalSystemApi.Services.Implements
 
             await _medicalRecordRepository.DeleteAsync(id);
         }
+
+        public async Task UpdateDiagnosisAndPrescriptions(int recordId, string diagnosis, string prescriptions)
+        {
+
+            if (string.IsNullOrWhiteSpace(diagnosis) || string.IsNullOrWhiteSpace(prescriptions))
+                throw new ArgumentException("Diagnosis and prescriptions cannot be empty.");
+
+            bool isUpdated = await _medicalRecordRepository.UpdateDiagnosisAndPrescriptions(recordId, diagnosis, prescriptions);
+
+            if (!isUpdated)
+                throw new KeyNotFoundException($"Medical record with ID {recordId} not found");
+
+
+            await _medicalRecordRepository.UpdateDiagnosisAndPrescriptions(recordId, diagnosis, prescriptions);
+        }
+
+
+
+        public async Task<IEnumerable<MedicalRecordDto>> GetMedicalHistoryByPatientIdAndDoctorId(int patientId, int doctorId)
+        {
+            var history = await _medicalRecordRepository.GetMedicalHistoryByPatientIdAndDoctorId(patientId, doctorId);
+
+            if (!history.Any())
+                throw new KeyNotFoundException($"No medical records found for patient ID {patientId} and doctor ID {doctorId}.");
+            var historyDto = _mapper.Map<IEnumerable<MedicalRecordDto>>(history);
+            return historyDto;
+        }
     }
 }

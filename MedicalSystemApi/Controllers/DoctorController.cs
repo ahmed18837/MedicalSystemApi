@@ -99,5 +99,65 @@ namespace MedicalSystemApi.Controllers
                 return Content(ex.Message);// 404 Not Found
             }
         }
+
+        [HttpGet("GetDoctorsBySpecialty/{specialty}")]
+        public async Task<IActionResult> GetDoctorsBySpecialty(string specialty)
+        {
+            try
+            {
+                var doctors = await _doctorService.GetDoctorsBySpecialty(specialty);
+                return Ok(doctors);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetAvailableDoctorsToday")]
+        public async Task<IActionResult> GetAvailableDoctors()
+        {
+            try
+            {
+                var doctors = await _doctorService.GetAvailableDoctorsToDay();
+                return Ok(doctors);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while retrieving available doctors.");
+            }
+        }
+
+        [HttpPut("{doctorId}/update-working-hours")]
+        public async Task<IActionResult> UpdateDoctorWorkingHours(int doctorId, [FromBody] string newWorkingHours)
+        {
+            try
+            {
+                await _doctorService.UpdateDoctorWorkingHoursAsync(doctorId, newWorkingHours);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("{doctorId}/assign-department/{departmentId}")]
+        public async Task<IActionResult> AssignDoctorToDepartment(int doctorId, int departmentId)
+        {
+            try
+            {
+                await _doctorService.AssignDoctorToDepartmentAsync(doctorId, departmentId);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

@@ -67,5 +67,43 @@ namespace MedicalSystemApi.Services.Implements
 
             await _medicalTestRepository.DeleteAsync(id);
         }
+
+        public async Task<IEnumerable<MedicalTestDto>> GetExpensiveTests(decimal minCost)
+        {
+            if (minCost < 0)
+                throw new ArgumentException("Cost cannot be negative");
+
+            var medicalTest = await _medicalTestRepository.GetExpensiveTests(minCost);
+            var medicalTestDto = _mapper.Map<IEnumerable<MedicalTestDto>>(medicalTest);
+            return medicalTestDto;
+        }
+
+        public async Task<IEnumerable<MedicalTestDto>> SearchMedicalTests(string searchTerm)
+        {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+                throw new ArgumentException("Search term cannot be empty");
+
+            var medicalTest = await _medicalTestRepository.SearchMedicalTests(searchTerm);
+            var medicalTestDto = _mapper.Map<IEnumerable<MedicalTestDto>>(medicalTest);
+            return medicalTestDto;
+        }
+
+        public async Task AssignMedicalTestToBill(int testId, int billId)
+        {
+            if (testId <= 0 || billId <= 0)
+                throw new ArgumentException("Test ID and Bill ID must be valid.");
+
+            await _medicalTestRepository.AssignMedicalTestToBill(testId, billId);
+        }
+
+        public async Task UpdateMedicalTestCost(int testId, decimal newCost)
+        {
+            if (newCost <= 0)
+                throw new ArgumentException("Cost must be greater than zero.");
+            if (testId <= 0)
+                throw new ArgumentException("ID not be valid");
+
+            await _medicalTestRepository.UpdateMedicalTestCost(testId, newCost);
+        }
     }
 }

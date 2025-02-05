@@ -99,5 +99,33 @@ namespace MedicalSystemApi.Controllers
                 return Content(ex.Message);// 404 Not Found
             }
         }
+
+        [HttpGet("{departmentId}/doctors")]
+        public async Task<IActionResult> GetDoctorsByDepartment(int departmentId)
+        {
+            try
+            {
+                var doctors = await _departmentService.GetDoctorsByDepartmentIdAsync(departmentId);
+                return Ok(doctors);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("{departmentId}/remove-doctor/{doctorId}")]
+        public async Task<IActionResult> RemoveDoctorFromDepartment(int departmentId, int doctorId)
+        {
+            try
+            {
+                await _departmentService.RemoveDoctorFromDepartmentAsync(departmentId, doctorId);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

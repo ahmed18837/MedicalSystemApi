@@ -99,5 +99,89 @@ namespace MedicalSystemApi.Controllers
                 return Content(ex.Message);// 404 Not Found
             }
         }
+
+        [HttpGet("admitted-in-year/{year}")]
+        public async Task<IActionResult> GetPatientsAdmittedInLastYear(int year)
+        {
+            try
+            {
+                var patients = await _patientService.GetPatientsAdmittedInLastYearAsync(year);
+                return Ok(patients);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("age-range")]
+        public async Task<IActionResult> GetPatientsByAgeRange([FromQuery] int minAge, [FromQuery] int maxAge)
+        {
+            try
+            {
+                var patients = await _patientService.GetPatientsByAgeRangeAsync(minAge, maxAge);
+                return Ok(patients);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("with-appointments")]
+        public async Task<IActionResult> GetPatientsWithAppointments()
+        {
+            try
+            {
+                var patients = await _patientService.GetPatientsWithAppointmentsAsync();
+                return Ok(patients);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("count-by-gender")]
+        public async Task<IActionResult> GetPatientCountByGender()
+        {
+            try
+            {
+                var result = await _patientService.GetPatientCountByGenderAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchPatientsByName([FromQuery] string name)
+        {
+            try
+            {
+                var patients = await _patientService.SearchPatientsByNameAsync(name);
+                return Ok(patients);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("update-phone/{id}")]
+        public async Task<IActionResult> UpdatePatientPhone(int id, [FromBody] string newPhone)
+        {
+            try
+            {
+                await _patientService.UpdatePatientPhoneAsync(id, newPhone);
+                return NoContent();  // 204 No Content if the update is successful
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);  // 400 Bad Request if validation fails
+            }
+        }
     }
 }

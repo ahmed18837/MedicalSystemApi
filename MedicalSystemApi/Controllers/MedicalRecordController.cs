@@ -99,5 +99,45 @@ namespace MedicalSystemApi.Controllers
                 return Content(ex.Message);// 404 Not Found
             }
         }
+
+        [HttpPut("AddDiagnosisAndPrescriptions")]
+        public async Task<IActionResult> AddDiagnosisAndPrescriptions(int recordId, string diagnosis, string prescriptions)
+        {
+            try
+            {
+                await _medicalRecordService.UpdateDiagnosisAndPrescriptions(recordId, diagnosis, prescriptions);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while processing the request");
+            }
+        }
+
+        [HttpGet("GetMedicalHistoryByPatientAndDoctor/{patientId}/{doctorId}")]
+        public async Task<IActionResult> GetMedicalHistoryByPatientIdAndDoctorId(int patientId, int doctorId)
+        {
+            try
+            {
+                var history = await _medicalRecordService.GetMedicalHistoryByPatientIdAndDoctorId(patientId, doctorId);
+                return Ok(history);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while retrieving the medical history.");
+            }
+        }
     }
 }

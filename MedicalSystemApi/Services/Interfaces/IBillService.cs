@@ -9,5 +9,8 @@ namespace MedicalSystemApi.Services.Interfaces
         Task AddAsync(CreateBillDto createBillDto);
         Task UpdateAsync(int id, UpdateBillDto updateBillDto);
         Task DeleteAsync(int id);
+
+        Task<BillDto> GetBillsByPatientIdAsync(int patientId);
+        Task UpdateTotalAmountAsync(int billId, decimal amount);
     }
 }

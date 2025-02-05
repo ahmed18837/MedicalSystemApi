@@ -9,5 +9,8 @@ namespace MedicalSystemApi.Services.Interfaces
         Task AddAsync(CreateMedicalRecordDto createMedicalRecordDto);
         Task UpdateAsync(int id, UpdateMedicalRecordDto updateMedicalRecordDto);
         Task DeleteAsync(int id);
+
+        Task UpdateDiagnosisAndPrescriptions(int recordId, string diagnosis, string prescriptions);
+        Task<IEnumerable<MedicalRecordDto>> GetMedicalHistoryByPatientIdAndDoctorId(int patientId, int doctorId);
     }
 }

@@ -85,6 +85,70 @@ namespace MedicalSystemApi.Services.Implements
             await _doctorRepository.DeleteAsync(id);
         }
 
+
+        public async Task<IEnumerable<DoctorDto>> GetDoctorsBySpecialty(string specialty)
+        {
+            if (string.IsNullOrWhiteSpace(specialty))
+                throw new ArgumentException("Specialty cannot be empty.");
+
+            var doctors = await _doctorRepository.GetDoctorsBySpecialty(specialty);
+
+            if (!doctors.Any() || doctors == null)
+                throw new KeyNotFoundException($"No doctors found for specialty '{specialty}'.");
+
+            var doctorsDto = _mapper.Map<IEnumerable<DoctorDto>>(doctors);
+            return doctorsDto;
+        }
+
+        public async Task<IEnumerable<DoctorDto>> GetAvailableDoctorsToDay()
+        {
+            var doctors = await _doctorRepository.GetAvailableDoctorsToDay();
+
+            if (!doctors.Any() || doctors == null)
+                throw new KeyNotFoundException("No available doctors today");
+
+            var doctorsDto = _mapper.Map<IEnumerable<DoctorDto>>(doctors);
+            return doctorsDto;
+        }
+
+        public async Task AssignDoctorToDepartmentAsync(int doctorId, int departmentId)
+        {
+            var doctor = await _doctorRepository.GetByIdAsync(doctorId) ??
+                throw new KeyNotFoundException("Doctor not found");
+
+            if (doctor.DepartmentId == departmentId)
+                throw new InvalidOperationException("Doctor is already in this department.");
+
+            var result = await _doctorRepository.AssignDoctorToDepartment(doctorId, departmentId);
+            if (!result) throw new Exception("not Assign!");
+
+        }
+
+        public async Task UpdateDoctorWorkingHoursAsync(int doctorId, string newWorkingHours)
+        {
+            if (string.IsNullOrWhiteSpace(newWorkingHours) || newWorkingHours.Length > 100)
+            {
+                throw new ArgumentException("Invalid working hours. It must be non-empty and less than 100 characters");
+            }
+
+            var success = await _doctorRepository.UpdateDoctorWorkingHoursAsync(doctorId, newWorkingHours);
+            if (!success)
+            {
+                throw new KeyNotFoundException($"Doctor with ID {doctorId} not found.");
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
         private async Task ValidateDoctorData(CreateDoctorDto doctorDto)
         {
             if (string.IsNullOrEmpty(doctorDto.FullName))
@@ -117,5 +181,7 @@ namespace MedicalSystemApi.Services.Implements
                 throw new InvalidOperationException("Invalid Phone Number!");
             }
         }
+
+
     }
 }

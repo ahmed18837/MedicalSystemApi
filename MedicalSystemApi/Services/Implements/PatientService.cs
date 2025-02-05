@@ -13,8 +13,8 @@ namespace MedicalSystemApi.Services.Implements
 
         public PatientService(IPatientRepository patientRepository, IMapper mapper)
         {
-            _patientRepository = patientRepository;
-            _mapper = mapper;
+            _patientRepository = patientRepository ?? throw new ArgumentNullException(nameof(patientRepository));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         public async Task<IEnumerable<PatientDto>> GetAllAsync()
@@ -90,6 +90,88 @@ namespace MedicalSystemApi.Services.Implements
               throw new KeyNotFoundException("Patient not found");
 
             await _patientRepository.DeleteAsync(id);
+        }
+
+        public async Task<IEnumerable<PatientDto>> GetPatientsByGenderAsync(string gender)
+        {
+            var patients = await _patientRepository.GetPatientsByGenderAsync(gender);
+            return _mapper.Map<IEnumerable<PatientDto>>(patients);
+        }
+
+        public async Task<IEnumerable<PatientDto>> GetPatientsByAgeRangeAsync(int minAge, int maxAge)
+        {
+            if (minAge < 0 || maxAge < 0 || minAge > maxAge)
+                throw new ArgumentException("Invalid age range: minAge must be ≤ maxAge and non-negative.");
+
+            var patients = await _patientRepository.GetPatientsByAgeRangeAsync(minAge, maxAge);
+
+            if (patients == null || !patients.Any())
+                throw new KeyNotFoundException($"No patients found between {minAge} and {maxAge} years old.");
+            var patientsDto = _mapper.Map<IEnumerable<PatientDto>>(patients);
+            return patientsDto;
+        }
+
+        public async Task<IEnumerable<PatientDto>> GetPatientsWithAppointmentsAsync()
+        {
+            var patients = await _patientRepository.GetPatientsWithAppointmentsAsync();
+
+            if (patients == null || !patients.Any())
+                throw new KeyNotFoundException("No patients with appointments found");
+
+            var patientsDto = _mapper.Map<IEnumerable<PatientDto>>(patients);
+            return patientsDto;
+        }
+
+        public async Task<Dictionary<string, int>> GetPatientCountByGenderAsync()
+        {
+            var genderCounts = await _patientRepository.GetPatientCountByGenderAsync();
+
+            if (genderCounts == null || genderCounts.Count == 0)
+                throw new KeyNotFoundException("No patient gender data found");
+
+            return genderCounts;
+        }
+
+        public async Task<IEnumerable<PatientDto>> GetPatientsAdmittedInLastYearAsync(int year)
+        {
+            int currentYear = DateTime.Now.Year;
+            if (year > currentYear)
+            {
+                throw new ArgumentException("Year cannot be in the future.");
+            }
+            if (year < currentYear - 100)
+            {
+                throw new ArgumentException("Year is too old. Please provide a valid year.");
+            }
+            var patients = await _patientRepository.GetPatientsAdmittedInLastYearAsync(year);
+
+            if (patients == null || !patients.Any())
+            {
+                throw new KeyNotFoundException($"No patients found for the year {year}");
+            }
+            var patientsDto = _mapper.Map<IEnumerable<PatientDto>>(patients);
+            return patientsDto;
+        }
+
+        public async Task<IEnumerable<PatientDto>> SearchPatientsByNameAsync(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Patient name is required for searching.");
+
+            var patients = await _patientRepository.SearchPatientsByNameAsync(name);
+
+            if (patients == null || !patients.Any())
+                throw new KeyNotFoundException($"No patients found matching: {name}");
+
+            return _mapper.Map<IEnumerable<PatientDto>>(patients);
+        }
+
+        public async Task UpdatePatientPhoneAsync(int patientId, string newPhone)
+        {
+            if (string.IsNullOrWhiteSpace(newPhone))
+                throw new ArgumentException("Phone number is required.");
+
+            await _patientRepository.UpdatePatientPhoneAsync(patientId, newPhone);
         }
     }
 }

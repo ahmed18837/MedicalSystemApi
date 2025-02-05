@@ -99,5 +99,47 @@ namespace MedicalSystemApi.Controllers
                 return Content(ex.Message);// 404 Not Found
             }
         }
+
+        [HttpGet("{billId}/tests")]
+        public async Task<IActionResult> GetTestsByBillId(int billId)
+        {
+            try
+            {
+                var tests = await _billMedicalTestService.GetTestsByBillIdAsync(billId);
+                return Ok(tests);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("test/{testId}/bills")]
+        public async Task<IActionResult> GetBillsForMedicalTest(int testId)
+        {
+            try
+            {
+                var bills = await _billMedicalTestService.GetBillsForMedicalTestAsync(testId);
+                return Ok(bills);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("{id}/cost")]
+        public async Task<IActionResult> UpdateTestCost(int id, [FromBody] decimal newCost)
+        {
+            try
+            {
+                await _billMedicalTestService.UpdateTestCostAsync(id, newCost);
+                return NoContent(); //204
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

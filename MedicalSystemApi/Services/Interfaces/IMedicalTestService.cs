@@ -9,5 +9,10 @@ namespace MedicalSystemApi.Services.Interfaces
         Task AddAsync(CreateMedicalTestDto createMedicalTestDto);
         Task UpdateAsync(int id, UpdateMedicalTestDto updateMedicalTestDto);
         Task DeleteAsync(int id);
+
+        Task<IEnumerable<MedicalTestDto>> GetExpensiveTests(decimal minCost);
+        Task<IEnumerable<MedicalTestDto>> SearchMedicalTests(string searchTerm);
+        Task AssignMedicalTestToBill(int testId, int billId);
+        Task UpdateMedicalTestCost(int testId, decimal newCost);
     }
 }

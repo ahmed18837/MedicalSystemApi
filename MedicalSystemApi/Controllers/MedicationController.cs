@@ -99,5 +99,48 @@ namespace MedicalSystemApi.Controllers
                 return Content(ex.Message);// 404 Not Found
             }
         }
+
+        [HttpGet("dosage-range")]
+        public async Task<IActionResult> GetMedicationsByDosageRange([FromQuery] string minDosage, [FromQuery] string maxDosage)
+        {
+            try
+            {
+                var medications = await _medicationService.GetMedicationsByDosageRangeAsync(minDosage, maxDosage);
+                return Ok(medications);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("statistics")]
+        public async Task<IActionResult> GetMedicationStatistics()
+        {
+            try
+            {
+                var statistics = await _medicationService.GetMedicationStatisticsAsync();
+                return Ok(statistics);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("update-instructions/{medicationId}")]
+        public async Task<IActionResult> UpdateMedicationInstructions(int medicationId, [FromBody] string newInstructions)
+        {
+            try
+            {
+                await _medicationService.UpdateMedicationInstructionsAsync(medicationId, newInstructions);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
     }
 }

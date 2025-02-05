@@ -1,4 +1,5 @@
-﻿using MedicalSystemApi.Models.DTOs.BillMedicalTest;
+﻿using MedicalSystemApi.Models.DTOs.Bill;
+using MedicalSystemApi.Models.DTOs.BillMedicalTest;
 
 namespace MedicalSystemApi.Services.Interfaces
 {
@@ -9,5 +10,9 @@ namespace MedicalSystemApi.Services.Interfaces
         Task AddAsync(CreateBillMedicalTestDto createBillMedicalTestDto);
         Task UpdateAsync(int id, UpdateBillMedicalTestDto updateBillMedicalTestDto);
         Task DeleteAsync(int id);
+
+        Task<IEnumerable<BillMedicalTestDto>> GetTestsByBillIdAsync(int billId);
+        Task<IEnumerable<BillDto>> GetBillsForMedicalTestAsync(int testId);
+        Task UpdateTestCostAsync(int id, decimal newCost);
     }
 }

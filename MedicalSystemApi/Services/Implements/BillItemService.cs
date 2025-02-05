@@ -84,5 +84,35 @@ namespace MedicalSystemApi.Services.Implements
             if (updateBillItemDto.Quantity <= 0)
                 throw new ArgumentException("Quantity must be greater than zero");
         }
+
+        public async Task<IEnumerable<BillItemDto>> GetBillItemsByBillIdAsync(int billId)
+        {
+            if (billId <= 0)
+                throw new ArgumentException("Invalid BillId. BillId must be greater than zero.");
+
+            // Get BillItems by BillId
+            var billItems = await _billItemRepository.GetBillItemsByBillIdAsync(billId);
+
+            // Check if no BillItems were found
+            if (!billItems.Any())
+                throw new Exception($"No BillItems found for BillId: {billId}");
+
+            var billItemDto = _mapper.Map<IEnumerable<BillItemDto>>(billItems);
+            return billItemDto;
+        }
+
+        public async Task UpdateBillItemPriceAsync(int billItemId, decimal unitPrice, int quantity)
+        {
+            if (unitPrice <= 0)
+                throw new Exception("Unit price must be greater than zero.");
+
+            if (quantity <= 0)
+                throw new Exception("Quantity must be greater than zero.");
+
+            var updateSuccessful = await _billItemRepository.UpdatePriceBasedOnQuantityAsync(billItemId, unitPrice, quantity);
+
+            if (!updateSuccessful)
+                throw new Exception("Failed to update BillItem");
+        }
     }
 }

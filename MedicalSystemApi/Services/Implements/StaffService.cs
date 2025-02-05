@@ -19,22 +19,11 @@ namespace MedicalSystemApi.Services.Implements
 
         public async Task<IEnumerable<StaffDto>> GetAllAsync()
         {
-            var staffList = await _staffRepository.GetAllWithDepartmentAsync() ??
+            var staffList = await _staffRepository.GetAllWithDepartmentNameAsync() ??
                 throw new Exception("There are not Staffs!");
 
             var staffListDto = _mapper.Map<IEnumerable<StaffDto>>(staffList); // ابطىء نسبيا ولكن سهل فى التعديل
             return staffListDto;
-
-            //return staffList.Select(s => new StaffDto // اسرع ولكن صعب فى التعديل
-            //{
-            //    Id = s.Id,
-            //    FullName = s.FullName,
-            //    RoleStaff = s.RoleStaff,
-            //    Phone = s.Phone,
-            //    Email = s.Email,
-            //    HireDate = s.HireDate,
-            //    DepartmentName = s.Department?.Name ?? "Unknown" // جلب اسم القسم فقط
-            //}).ToList();
         }
 
         public async Task<StaffDto> GetByIdAsync(int id)
@@ -88,6 +77,81 @@ namespace MedicalSystemApi.Services.Implements
             await _staffRepository.DeleteAsync(id);
         }
 
+        public async Task<IEnumerable<StaffDto>> GetStaffByDepartmentAsync(int departmentId)
+        {
+            if (departmentId <= 0)
+                throw new ArgumentException("Department ID must be a positive number.");
+
+            if (!await _staffRepository.DepartmentExistsAsync(departmentId))
+            {
+                throw new KeyNotFoundException("Department not found!");
+            }
+            var staffList = await _staffRepository.GetStaffByDepartmentAsync(departmentId);
+            var staffListDto = _mapper.Map<IEnumerable<StaffDto>>(staffList);
+            return staffListDto;
+        }
+
+        public async Task<Dictionary<string, int>> GetStaffCountByRoleAsync()
+        {
+            var data = await _staffRepository.GetStaffCountByRoleAsync();
+            if (data == null || !data.Any())
+                throw new InvalidOperationException("No staff data found for roles");
+
+            return data;
+        }
+
+        public async Task<Dictionary<string, int>> GetStaffCountByDepartmentAsync()
+        {
+            var data = await _staffRepository.GetStaffCountByDepartmentAsync();
+            if (data == null || !data.Any())
+                throw new InvalidOperationException("No staff data found for departments.");
+
+            return data;
+        }
+
+        public async Task<int> GetYearsOfServiceAsync(int id)
+        {
+            if (id <= 0)
+                throw new ArgumentException("Invalid staff ID.");
+
+            var years = await _staffRepository.GetYearsOfServiceAsync(id);
+            if (years == -1)
+                throw new KeyNotFoundException("Staff member not found.");
+
+            return years;
+        }
+
+        public async Task<StaffDto> SearchWithEmailStaffAsync(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email number is required");
+
+            if (!await _staffRepository.IsEmailValid(email))
+            {
+                throw new InvalidOperationException("Invalid Email Address!");
+            }
+
+            var staff = await _staffRepository.SearchWithEmailStaffAsync(email) ??
+                throw new KeyNotFoundException("Staff member not found");
+            var staffDto = _mapper.Map<StaffDto>(staff);
+            return staffDto;
+        }
+
+        public async Task<StaffDto> SearchWithPhoneStaffAsync(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+                throw new ArgumentException("Phone number is required");
+
+            if (!await _staffRepository.IsPhoneNumberValid(phone))
+            {
+                throw new InvalidOperationException("Invalid Phone Number!");
+            }
+
+            var staff = await _staffRepository.SearchWithPhoneStaffAsync(phone) ??
+                throw new KeyNotFoundException("Staff member not found");
+            var staffDto = _mapper.Map<StaffDto>(staff);
+            return staffDto;
+        }
 
         private async Task ValidateStaffData(UpdateStaffDto staffDto)
         {
@@ -126,5 +190,45 @@ namespace MedicalSystemApi.Services.Implements
             }
         }
 
+
+        public async Task UpdateStaffRoleOrDepartmentAsync(UpdateStaffRoleOrDepartmentDto updateDto)
+        {
+            if (updateDto == null)
+            {
+                throw new ArgumentNullException("Input data cannot be null");
+            }
+            if (updateDto.StaffId <= 0)
+            {
+                throw new ArgumentException("Invalid Staff ID");
+            }
+            if (!await _staffRepository.StaffIdExistsAsync(updateDto.StaffId))
+            {
+                throw new KeyNotFoundException("Staff member not found");
+            }
+            if (!string.IsNullOrWhiteSpace(updateDto.RoleStaff) && !IsValidRole(updateDto.RoleStaff))
+            {
+                throw new ArgumentException("Invalid role staff");
+            }
+            if (!await _staffRepository.DepartmentExistsAsync(updateDto.DepartmentId))
+            {
+                throw new KeyNotFoundException("Department not found!");
+            }
+            await _staffRepository.UpdateStaffRoleOrDepartmentAsync(updateDto.StaffId, updateDto.RoleStaff, updateDto.DepartmentId);
+        }
+
+        private bool IsValidRole(string role)
+        {
+            // Define a list of valid roles
+            var validRoles = new List<string>
+    {
+        "Secretary",
+        "Technician",
+        "Receptionist",
+        "Manager",
+        "Nurse",
+        "Doctor"
+    };
+            return validRoles.Contains(role);
+        }
     }
 }

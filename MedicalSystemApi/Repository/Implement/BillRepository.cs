@@ -13,10 +13,27 @@ namespace MedicalSystemApi.Repository.Implement
             _dbContext = dbContext;
         }
 
+        public async Task<Bill> GetBillsByPatientIdAsync(int patientId)
+        {
+            return await _dbContext.Bills
+            .AsNoTracking()
+            .Where(b => b.PatientId == patientId)
+            .OrderByDescending(b => b.DateIssued)
+            .FirstOrDefaultAsync();
+        }
+
         public async Task<bool> PatientExistsAsync(int patientId)
         {
             return await _dbContext.Patients
                  .AnyAsync(i => i.Id == patientId);
+        }
+
+        public async Task<bool> UpdateTotalAmountAsync(int billId, decimal amount)
+        {
+            var bill = await _dbContext.Bills.FindAsync(billId);
+            bill!.TotalAmount = amount;
+            await _dbContext.SaveChangesAsync();
+            return true;
         }
     }
 }

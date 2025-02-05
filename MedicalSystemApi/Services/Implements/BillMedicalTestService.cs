@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using MedicalSystemApi.Models.DTOs.Bill;
 using MedicalSystemApi.Models.DTOs.BillMedicalTest;
 using MedicalSystemApi.Models.Entities;
 using MedicalSystemApi.Repository.Interfaces;
@@ -9,11 +10,15 @@ namespace MedicalSystemApi.Services.Implements
     public class BillMedicalTestService : IBillMedicalTestService
     {
         private readonly IBillMedicalTestRepository _billMedicalTestRepository;
+        private readonly IMedicalTestRepository _medicalTestRepository;
+        private readonly IBillRepository _billRepository;
         private readonly IMapper _mapper;
 
-        public BillMedicalTestService(IBillMedicalTestRepository billMedicalTestRepository, IMapper mapper)
+        public BillMedicalTestService(IBillMedicalTestRepository billMedicalTestRepository, IBillRepository billRepository, IMedicalTestRepository medicalTestRepository, IMapper mapper)
         {
             _billMedicalTestRepository = billMedicalTestRepository;
+            _billRepository = billRepository;
+            _medicalTestRepository = medicalTestRepository;
             _mapper = mapper;
         }
 
@@ -79,6 +84,48 @@ namespace MedicalSystemApi.Services.Implements
             }
             if (createBillMedicalTestDto.TestCost <= 0)
                 throw new ArgumentException("TestCost must be greater than zero");
+        }
+
+        public async Task<IEnumerable<BillMedicalTestDto>> GetTestsByBillIdAsync(int billId)
+        {
+            var bill = await _billRepository.GetByIdAsync(billId);
+            if (bill == null)
+                throw new ArgumentException($"Bill with ID {billId} does not exist.");
+
+
+            var tests = await _billMedicalTestRepository.GetTestsByBillIdAsync(billId);
+            if (!tests.Any())
+                throw new InvalidOperationException($"No medical tests found for Bill ID {billId}");
+            var testsDto = _mapper.Map<IEnumerable<BillMedicalTestDto>>(tests);
+            return testsDto;
+        }
+
+        public async Task<IEnumerable<BillDto>> GetBillsForMedicalTestAsync(int testId)
+        {
+            var medicalTest = await _medicalTestRepository.GetByIdAsync(testId);
+            if (medicalTest == null)
+                throw new ArgumentException($"Medical test with ID {testId} does not exist.");
+
+            // **2️⃣ Fetch Bills for the Given Test**
+            var bills = await _billMedicalTestRepository.GetBillsByTestIdAsync(testId);
+            if (!bills.Any())
+                throw new InvalidOperationException($"No bills found for Medical Test ID {testId}");
+            var billsDto = _mapper.Map<IEnumerable<BillDto>>(bills);
+            return billsDto;
+        }
+
+        public async Task UpdateTestCostAsync(int id, decimal newCost)
+        {
+            if (id <= 0)
+                throw new ArgumentException("Invalid BillMedicalTest ID");
+
+            if (newCost <= 0)
+                throw new ArgumentException("Test cost must be greater than zero");
+
+            var updated = await _billMedicalTestRepository.UpdateTestCostAsync(id, newCost);
+
+            if (!updated)
+                throw new KeyNotFoundException($"No record found for BillMedicalTest ID {id}");
         }
     }
 }

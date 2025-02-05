@@ -99,5 +99,103 @@ namespace MedicalSystemApi.Controllers
                 return Content(ex.Message);// 404 Not Found
             }
         }
+
+        [HttpGet("GetByDepartment/{departmentId}")]
+        public async Task<IActionResult> GetStaffByDepartment(int departmentId)
+        {
+            try
+            {
+                var staffListDto = await _staffService.GetStaffByDepartmentAsync(departmentId);
+                return Ok(staffListDto);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("SearchWithPhone")]
+        public async Task<IActionResult> SearchWithPhoneStaff([FromQuery] string phone)
+        {
+            try
+            {
+                var staff = await _staffService.SearchWithPhoneStaffAsync(phone);
+                return Ok(staff);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("SearchWithEmail")]
+        public async Task<IActionResult> SearchWithEmailStaff([FromQuery] string email)
+        {
+            try
+            {
+                var staff = await _staffService.SearchWithEmailStaffAsync(email);
+                return Ok(staff);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetYearsOfService/{id}")]
+        public async Task<IActionResult> GetYearsOfService(int id)
+        {
+            try
+            {
+                var years = await _staffService.GetYearsOfServiceAsync(id);
+                return Ok(new { StaffId = id, YearsOfService = years });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("countByRole")]
+        public async Task<ActionResult<Dictionary<string, int>>> GetStaffCountByRole()
+        {
+            try
+            {
+                var staffCountByRole = await _staffService.GetStaffCountByRoleAsync();
+                return Ok(staffCountByRole);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("countByDepartment")]
+        public async Task<ActionResult<Dictionary<string, int>>> GetStaffCountByDepartment()
+        {
+            try
+            {
+                var staffCountByDepartment = await _staffService.GetStaffCountByDepartmentAsync();
+                return Ok(staffCountByDepartment);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("updateRoleOrDepartment")]
+        public async Task<IActionResult> UpdateStaffRoleOrDepartment([FromBody] UpdateStaffRoleOrDepartmentDto updateDto)
+        {
+            try
+            {
+                await _staffService.UpdateStaffRoleOrDepartmentAsync(updateDto);
+                return NoContent(); // 204 No Content
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

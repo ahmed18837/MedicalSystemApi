@@ -81,5 +81,30 @@ namespace MedicalSystemApi.Services.Implements
 
             await _medicationRepository.DeleteAsync(id);
         }
+
+        public async Task<IEnumerable<MedicationDto>> GetMedicationsByDosageRangeAsync(string minDosage, string maxDosage)
+        {
+            if (string.IsNullOrEmpty(minDosage) || string.IsNullOrEmpty(maxDosage))
+                throw new ArgumentException("Dosage values cannot be null or empty.");
+
+            var medications = await _medicationRepository.GetMedicationsByDosageRangeAsync(minDosage, maxDosage);
+            return _mapper.Map<IEnumerable<MedicationDto>>(medications);
+        }
+
+        public async Task UpdateMedicationInstructionsAsync(int id, string instructions)
+        {
+            if (string.IsNullOrWhiteSpace(instructions))
+                throw new ArgumentException("Instructions cannot be empty.");
+
+            await _medicationRepository.UpdateMedicationInstructionsAsync(id, instructions);
+
+        }
+
+        public async Task<Dictionary<string, int>> GetMedicationStatisticsAsync()
+        {
+            var statistics = await _medicationRepository.GetMedicationStatisticsAsync();
+            if (statistics == null) throw new Exception("Not Found!");
+            return statistics;
+        }
     }
 }

@@ -45,7 +45,8 @@ namespace MedicalSystemApi.Mapping
             CreateMap<CreateMedicalTestDto, MedicalTest>();
             CreateMap<UpdateMedicalTestDto, MedicalTest>();
 
-            CreateMap<Doctor, DoctorDto>().ReverseMap();
+            CreateMap<Doctor, DoctorDto>()
+                 .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department.Name)); // Map DepartmentName
             CreateMap<CreateDoctorDto, Doctor>();
             CreateMap<UpdateDoctorDto, CreateDoctorDto>().ReverseMap();
             CreateMap<UpdateDoctorDto, Doctor>();

@@ -42,5 +42,33 @@ namespace MedicalSystemApi.Repository.Implement
             return await _dbContext.Bills
                 .AnyAsync(d => d.Id == billId);
         }
+
+        public async Task<IEnumerable<BillMedicalTest>> GetTestsByBillIdAsync(int billId)
+        {
+            return await _dbContext.BillMedicalTests
+            .Where(t => t.BillId == billId)
+            .AsNoTracking()
+            .Include(t => t.MedicalTest)
+            .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Bill>> GetBillsByTestIdAsync(int testId)
+        {
+            return await _dbContext.BillMedicalTests
+           .Where(t => t.MedicalTestId == testId)
+           .AsNoTracking()
+           .Select(t => t.Bill)
+           .ToListAsync();
+        }
+
+        public async Task<bool> UpdateTestCostAsync(int id, decimal newCost)
+        {
+            var billMedicalTest = await _dbContext.BillMedicalTests.FindAsync(id);
+            if (billMedicalTest == null)
+                return false; // Entry not found
+
+            billMedicalTest.TestCost = newCost;
+            return await _dbContext.SaveChangesAsync() > 0;
+        }
     }
 }

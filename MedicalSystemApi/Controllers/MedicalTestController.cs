@@ -99,5 +99,70 @@ namespace MedicalSystemApi.Controllers
                 return Content(ex.Message);// 404 Not Found
             }
         }
+
+        [HttpGet("GetExpensiveTests")]
+        public async Task<IActionResult> GetExpensiveTests(decimal minCost)
+        {
+            try
+            {
+                var tests = await _medicalTestService.GetExpensiveTests(minCost);
+                return Ok(tests);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("Search")]
+        public async Task<IActionResult> SearchMedicalTests(string searchTerm)
+        {
+            try
+            {
+                var results = await _medicalTestService.SearchMedicalTests(searchTerm);
+                return Ok(results);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("AssignTestToBill")]
+        public async Task<IActionResult> AssignTestToBill(int testId, int billId)
+        {
+            try
+            {
+                await _medicalTestService.AssignMedicalTestToBill(testId, billId);
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while assigning test.");
+            }
+        }
+
+        [HttpPut("UpdateCost")]
+        public async Task<IActionResult> UpdateCost(int testId, decimal newCost)
+        {
+            try
+            {
+                await _medicalTestService.UpdateMedicalTestCost(testId, newCost);
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while updating cost.");
+            }
+        }
+
     }
 }

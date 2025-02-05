@@ -68,5 +68,57 @@ namespace MedicalSystemApi.Repository.Implement
             return await _dbContext.Staffs
               .AnyAsync(i => i.Id == staffId);
         }
+
+        public async Task<IEnumerable<Appointment>> GetAppointmentsByPatientIdAsync(int patientId)
+        {
+            return await _dbContext.Appointments
+           .AsNoTracking()
+           .Where(a => a.PatientId == patientId)
+           .Include(a => a.Patient) // Include Patient entity
+           .Include(a => a.Doctor)  // Include Doctor entity
+           .Include(a => a.Staff)   // Include Staff entity
+           .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Appointment>> GetAppointmentsByDoctorIdAsync(int doctorId)
+        {
+            return await _dbContext.Appointments
+           .AsNoTracking()
+           .Where(a => a.DoctorId == doctorId)
+            .Include(a => a.Patient) // Include Patient entity
+           .Include(a => a.Doctor)  // Include Doctor entity
+           .Include(a => a.Staff)   // Include Staff entity
+           .ToListAsync();
+        }
+
+        public async Task<bool> CheckDoctorAvailabilityAsync(int doctorId, DateTime date, TimeSpan time)
+        {
+            return await _dbContext.Appointments
+            .AnyAsync(a => a.DoctorId == doctorId && a.Date == date && a.Time == time && a.Status != "Cancelled");
+
+
+        }
+
+        public async Task<bool> UpdateAppointmentStatusAsync(int appointmentId, string status)
+        {
+            var appointment = await _dbContext.Appointments.FindAsync(appointmentId);
+            if (appointment == null)
+                return false;
+
+            appointment.Status = status;
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<IEnumerable<Appointment>> GetUpcomingAppointmentsAsync()
+        {
+            return await _dbContext.Appointments
+           .Where(a => a.Date >= DateTime.Today)
+           .OrderBy(a => a.Date)
+           .ThenBy(a => a.Time)
+           .ToListAsync();
+        }
+
+
     }
 }

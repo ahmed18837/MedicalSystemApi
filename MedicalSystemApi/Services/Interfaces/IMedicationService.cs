@@ -9,5 +9,11 @@ namespace MedicalSystemApi.Services.Interfaces
         Task AddAsync(CreateMedicationDto createMedicationDto);
         Task UpdateAsync(int id, UpdateMedicationDto updateMedicationDto);
         Task DeleteAsync(int id);
+
+
+        Task<IEnumerable<MedicationDto>> GetMedicationsByDosageRangeAsync(string minDosage, string maxDosage);
+        Task UpdateMedicationInstructionsAsync(int id, string instructions);
+        Task<Dictionary<string, int>> GetMedicationStatisticsAsync();
+
     }
 }
