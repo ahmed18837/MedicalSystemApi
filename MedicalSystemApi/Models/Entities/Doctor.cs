@@ -34,6 +34,8 @@ namespace MedicalSystemApi.Models.Entities
         [Required]
         public int? DepartmentId { get; set; } // Foreign Key (Required: الطبيب ينتمي لقسم محدد)
 
+        public string? ImagePath { get; set; }
+
         // Navigation Properties
         [ForeignKey("DepartmentId")]
         public Department? Department { get; set; } // Required

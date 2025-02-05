@@ -9,5 +9,6 @@
         public string Email { get; set; }
         public DateTime? HireDate { get; set; }
         public string DepartmentName { get; set; }
+        public string ImagePath { get; set; } = string.Empty;
     }
 }

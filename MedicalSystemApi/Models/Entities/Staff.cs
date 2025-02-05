@@ -25,6 +25,8 @@ namespace MedicalSystemApi.Models.Entities
         [Column(TypeName = "DATE")]
         public DateTime HireDate { get; set; } // تاريخ التوظيف
 
+        public string? ImagePath { get; set; }
+
         // Navigation Properties
         [Required]
         public int DepartmentId { get; set; } // Foreign Key للقسم

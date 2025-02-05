@@ -49,7 +49,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPost("AddStaff")]
-        public async Task<IActionResult> Add(CreateStaffDto createStaffDto)
+        public async Task<IActionResult> Add([FromForm] CreateStaffDto createStaffDto)
         {
             try
             {
@@ -68,7 +68,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateStaffDto updateStaffDto)
+        public async Task<IActionResult> Update(int id, [FromForm] UpdateStaffDto updateStaffDto)
         {
             try
             {
@@ -197,5 +197,6 @@ namespace MedicalSystemApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
     }
 }

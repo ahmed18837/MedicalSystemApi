@@ -9,11 +9,13 @@ namespace MedicalSystemApi.Services.Implements
     public class DoctorService : IDoctorService
     {
         private readonly IDoctorRepository _doctorRepository;
+        private readonly IFileService _fileService;
         private readonly IMapper _mapper;
 
-        public DoctorService(IDoctorRepository doctorRepository, IMapper mapper)
+        public DoctorService(IDoctorRepository doctorRepository, IFileService fileService, IMapper mapper)
         {
             _doctorRepository = doctorRepository;
+            _fileService = fileService;
             _mapper = mapper;
         }
 
@@ -57,7 +59,20 @@ namespace MedicalSystemApi.Services.Implements
 
             await ValidateDoctorData(createDoctorDto);
 
+            if (await _doctorRepository.PhoneExistsAsync(createDoctorDto.Phone))
+            {
+                throw new InvalidOperationException("Phone Number already exists");
+            }
+            if (await _doctorRepository.EmailExistsAsync(createDoctorDto.Email))
+            {
+                throw new InvalidOperationException("Email already exists");
+            }
+
             var doctor = _mapper.Map<Doctor>(createDoctorDto);
+
+            doctor.ImagePath = createDoctorDto.Image != null
+           ? _fileService.SaveFile(createDoctorDto.Image, "Doctors") : null;
+
             await _doctorRepository.AddAsync(doctor);
         }
 
@@ -71,20 +86,33 @@ namespace MedicalSystemApi.Services.Implements
             var createdDoctorDto = _mapper.Map<CreateDoctorDto>(updateDoctorDto);
 
             await ValidateDoctorData(createdDoctorDto);
+            _mapper.Map(updateDoctorDto, doctor);
 
-            var doctorUpdated = _mapper.Map(updateDoctorDto, doctor);
+            if (updateDoctorDto.Image != null && updateDoctorDto.Image.Length > 0)
+            {
+                if (!string.IsNullOrEmpty(doctor.ImagePath))
+                {
+                    await _fileService.DeleteFileAsync(doctor.ImagePath!);
+                }
+            }
 
-            await _doctorRepository.UpdateAsync(id, doctorUpdated);
+            doctor.ImagePath = updateDoctorDto.Image != null
+          ? _fileService.SaveFile(updateDoctorDto.Image, "Doctors") : null;
+
+            await _doctorRepository.UpdateAsync(id, doctor);
         }
 
         public async Task DeleteAsync(int id)
         {
-            var staff = await _doctorRepository.GetByIdAsync(id) ??
+            var doctor = await _doctorRepository.GetByIdAsync(id) ??
               throw new KeyNotFoundException("Doctor not found");
 
+            if (!string.IsNullOrEmpty(doctor.ImagePath))
+            {
+                await _fileService.DeleteFileAsync(doctor.ImagePath);
+            }
             await _doctorRepository.DeleteAsync(id);
         }
-
 
         public async Task<IEnumerable<DoctorDto>> GetDoctorsBySpecialty(string specialty)
         {
@@ -138,17 +166,6 @@ namespace MedicalSystemApi.Services.Implements
             }
         }
 
-
-
-
-
-
-
-
-
-
-
-
         private async Task ValidateDoctorData(CreateDoctorDto doctorDto)
         {
             if (string.IsNullOrEmpty(doctorDto.FullName))
@@ -161,19 +178,9 @@ namespace MedicalSystemApi.Services.Implements
                 throw new InvalidOperationException("Invalid Email Address!");
             }
 
-            if (await _doctorRepository.EmailExistsAsync(doctorDto.Email))
-            {
-                throw new InvalidOperationException("Email already exists");
-            }
-
             if (!await _doctorRepository.DepartmentExistsAsync(doctorDto.DepartmentId))
             {
                 throw new KeyNotFoundException("Department not found!");
-            }
-
-            if (await _doctorRepository.PhoneExistsAsync(doctorDto.Phone))
-            {
-                throw new InvalidOperationException("Phone Number already exists");
             }
 
             if (!await _doctorRepository.IsPhoneNumberValid(doctorDto.Phone))
@@ -181,7 +188,5 @@ namespace MedicalSystemApi.Services.Implements
                 throw new InvalidOperationException("Invalid Phone Number!");
             }
         }
-
-
     }
 }

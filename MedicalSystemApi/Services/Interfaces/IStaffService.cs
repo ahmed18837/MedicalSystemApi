@@ -16,6 +16,6 @@ namespace MedicalSystemApi.Services.Interfaces
         Task<StaffDto> SearchWithPhoneStaffAsync(string email);
         Task<int> GetYearsOfServiceAsync(int id);
         Task UpdateStaffRoleOrDepartmentAsync(UpdateStaffRoleOrDepartmentDto updateDto);
-
+        Task UpdateStaffImageAsync(string staffId, IFormFile file);
     }
 }

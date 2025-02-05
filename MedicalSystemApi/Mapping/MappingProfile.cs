@@ -25,7 +25,6 @@ namespace MedicalSystemApi.Mapping
             CreateMap<CreateStaffDto, Staff>();
             CreateMap<Staff, UpdateStaffDto>().ReverseMap();
             CreateMap<UpdateStaffDto, CreateStaffDto>().ReverseMap();
-            CreateMap<Staff, PatchStaffDto>().ReverseMap();
 
             CreateMap<Patient, PatientDto>().ReverseMap();
             CreateMap<CreatePatientDto, Patient>();

@@ -9,11 +9,13 @@ namespace MedicalSystemApi.Services.Implements
     public class StaffService : IStaffService
     {
         private readonly IStaffRepository _staffRepository;
+        private readonly IFileService _fileService;
         private readonly IMapper _mapper;
 
-        public StaffService(IStaffRepository staffRepository, IMapper mapper)
+        public StaffService(IStaffRepository staffRepository, IFileService fileService, IMapper mapper)
         {
             _staffRepository = staffRepository;
+            _fileService = fileService;
             _mapper = mapper;
         }
 
@@ -46,7 +48,19 @@ namespace MedicalSystemApi.Services.Implements
 
             await ValidateStaffData(staffUpdated);
 
+            if (await _staffRepository.EmailExistsAsync(createStaffDto.Email))
+            {
+                throw new InvalidOperationException("Email already exists");
+            }
+
+            if (await _staffRepository.PhoneExistsAsync(createStaffDto.Phone))
+            {
+                throw new InvalidOperationException("Phone Number already exists");
+            }
             var staff = _mapper.Map<Staff>(createStaffDto);
+
+            staff.ImagePath = createStaffDto.Image != null
+            ? _fileService.SaveFile(createStaffDto.Image, "Staffs") : null;
 
             staff.HireDate = DateTime.Now;
 
@@ -61,12 +75,22 @@ namespace MedicalSystemApi.Services.Implements
                 throw new KeyNotFoundException("Staff not found");
 
             await ValidateStaffData(updateStaffDto);
+            _mapper.Map(updateStaffDto, staff);
 
-            var staffUpdated = _mapper.Map(updateStaffDto, staff);
+            if (updateStaffDto.Image != null)
+            {
+                if (!string.IsNullOrEmpty(staff.ImagePath))
+                {
+                    await _fileService.DeleteFileAsync(staff.ImagePath!);
+                }
+            }
+
+            staff.ImagePath = updateStaffDto.Image != null
+           ? _fileService.SaveFile(updateStaffDto.Image, "Staffs") : null;
 
             staff.HireDate = DateTime.Now;
 
-            await _staffRepository.UpdateAsync(id, staffUpdated);
+            await _staffRepository.UpdateAsync(id, staff);
         }
 
         public async Task DeleteAsync(int id)
@@ -74,6 +98,10 @@ namespace MedicalSystemApi.Services.Implements
             var staff = await _staffRepository.GetByIdAsync(id) ??
                throw new KeyNotFoundException("Staff not found");
 
+            if (!string.IsNullOrEmpty(staff.ImagePath))
+            {
+                await _fileService.DeleteFileAsync(staff.ImagePath);
+            }
             await _staffRepository.DeleteAsync(id);
         }
 
@@ -153,44 +181,6 @@ namespace MedicalSystemApi.Services.Implements
             return staffDto;
         }
 
-        private async Task ValidateStaffData(UpdateStaffDto staffDto)
-        {
-            if (string.IsNullOrEmpty(staffDto.FullName))
-            {
-                throw new ArgumentException("Full name is required");
-            }
-            if (string.IsNullOrEmpty(staffDto.RoleStaff))
-            {
-                throw new ArgumentException("Role name is required");
-            }
-
-            if (!await _staffRepository.IsEmailValid(staffDto.Email))
-            {
-                throw new InvalidOperationException("Invalid Email Address!");
-            }
-
-            if (await _staffRepository.EmailExistsAsync(staffDto.Email))
-            {
-                throw new InvalidOperationException("Email already exists");
-            }
-
-            if (!await _staffRepository.DepartmentExistsAsync(staffDto.DepartmentId))
-            {
-                throw new KeyNotFoundException("Department not found!");
-            }
-
-            if (await _staffRepository.PhoneExistsAsync(staffDto.Phone))
-            {
-                throw new InvalidOperationException("Phone Number already exists");
-            }
-
-            if (!await _staffRepository.IsPhoneNumberValid(staffDto.Phone))
-            {
-                throw new InvalidOperationException("Invalid Phone Number!");
-            }
-        }
-
-
         public async Task UpdateStaffRoleOrDepartmentAsync(UpdateStaffRoleOrDepartmentDto updateDto)
         {
             if (updateDto == null)
@@ -216,6 +206,54 @@ namespace MedicalSystemApi.Services.Implements
             await _staffRepository.UpdateStaffRoleOrDepartmentAsync(updateDto.StaffId, updateDto.RoleStaff, updateDto.DepartmentId);
         }
 
+        public async Task UpdateStaffImageAsync(string staffId, IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                throw new KeyNotFoundException("No file uploaded");
+            }
+
+            var staff = await _staffRepository.GetByIdAsync(int.Parse(staffId)) ??
+                throw new KeyNotFoundException("Staff not found");
+
+            if (!string.IsNullOrEmpty(staff.ImagePath))
+            {
+                await _fileService.DeleteFileAsync(staff.ImagePath);
+            }
+
+            var newImagePath = _fileService.SaveFile(file, "Staffs");
+
+            // تحديث مسار الصورة في قاعدة البيانات
+            staff.ImagePath = newImagePath!;
+            await _staffRepository.UpdateAsync(int.Parse(staffId), staff);
+        }
+
+        private async Task ValidateStaffData(UpdateStaffDto staffDto)
+        {
+            if (string.IsNullOrEmpty(staffDto.FullName))
+            {
+                throw new ArgumentException("Full name is required");
+            }
+            if (string.IsNullOrEmpty(staffDto.RoleStaff))
+            {
+                throw new ArgumentException("Role name is required");
+            }
+
+            if (!await _staffRepository.IsEmailValid(staffDto.Email))
+            {
+                throw new InvalidOperationException("Invalid Email Address!");
+            }
+
+            if (!await _staffRepository.DepartmentExistsAsync(staffDto.DepartmentId))
+            {
+                throw new KeyNotFoundException("Department not found!");
+            }
+
+            if (!await _staffRepository.IsPhoneNumberValid(staffDto.Phone))
+            {
+                throw new InvalidOperationException("Invalid Phone Number!");
+            }
+        }
         private bool IsValidRole(string role)
         {
             // Define a list of valid roles

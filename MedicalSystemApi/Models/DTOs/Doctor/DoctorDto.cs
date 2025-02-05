@@ -11,5 +11,6 @@
         public string Specialty { get; set; }
         public string WorkingHours { get; set; }
         public string DepartmentName { get; set; }
+        public string ImagePath { get; set; } = string.Empty;
     }
 }

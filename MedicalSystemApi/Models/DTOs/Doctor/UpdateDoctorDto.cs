@@ -9,5 +9,6 @@
         public string Specialty { get; set; }
         public string WorkingHours { get; set; }
         public int DepartmentId { get; set; }
+        public IFormFile? Image { get; set; }
     }
 }
