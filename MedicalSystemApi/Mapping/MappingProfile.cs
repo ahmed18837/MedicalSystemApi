@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using MedicalSystemApi.Data;
 using MedicalSystemApi.Models.DTOs.Appointment;
+using MedicalSystemApi.Models.DTOs.Auth;
 using MedicalSystemApi.Models.DTOs.Bill;
 using MedicalSystemApi.Models.DTOs.BillItem;
 using MedicalSystemApi.Models.DTOs.BillMedicalTest;
@@ -72,6 +74,10 @@ namespace MedicalSystemApi.Mapping
             CreateMap<CreateAppointmentDto, Appointment>()
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => "Pending"));
             CreateMap<UpdateAppointmentDto, Appointment>();
+
+
+            CreateMap<RequestRegisterDto, ApplicationUser>()
+           .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email)); // Set UserName = Email
 
         }
     }

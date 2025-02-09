@@ -4,6 +4,7 @@ using MedicalSystemApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MedicalSystemApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250208203951_AddIdentityUserContext")]
+    partial class AddIdentityUserContext
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -535,13 +538,6 @@ namespace MedicalSystemApi.Migrations
                             ConcurrencyStamp = "8e7ce64e-1f00-407b-8ef4-17f826fa01d0",
                             Name = "SuperAdmin",
                             NormalizedName = "SUPERADMIN"
-                        },
-                        new
-                        {
-                            Id = "77d9a35c-a1b6-4310-a928-e90de8b23eba",
-                            ConcurrencyStamp = "77d9a35c-a1b6-4310-a928-e90de8b23eba",
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
                         });
                 });
 
