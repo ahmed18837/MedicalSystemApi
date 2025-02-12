@@ -1,4 +1,4 @@
-﻿using MedicalSystemApi.Data;
+﻿using MedicalSystemApi.Models.Entities;
 using Microsoft.AspNetCore.Identity;
 
 namespace MedicalSystemApi.Repository.Interfaces
@@ -13,5 +13,7 @@ namespace MedicalSystemApi.Repository.Interfaces
         Task<IList<string>> GetUserRolesAsync(ApplicationUser user);
         Task<bool> IsEmailValid(string email);
         Task<bool> IsPhoneNumberValid(string phoneNumber);
+        Task<bool> PhoneExistsAsync(string phoneNumber);
+        Task CreateRoleAsync(string roleName);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using MedicalSystemApi.Models.DTOs.Appointment;
 using MedicalSystemApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
@@ -15,7 +16,9 @@ namespace MedicalSystemApi.Controllers
             _appointmentService = appointmentService;
         }
 
+
         [HttpGet("AllAppointments")]
+        [Authorize]
         public async Task<IActionResult> GetAll()
         {
             try

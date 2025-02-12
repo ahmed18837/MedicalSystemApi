@@ -1,66 +1,51 @@
-﻿using MedicalSystemApi.Models.DTOs.Auth;
-using MedicalSystemApi.Services.Interfaces;
-using MimeKit;
-using SmtpClient = MailKit.Net.Smtp.SmtpClient;
+﻿using MedicalSystemApi.Services.Interfaces;
+using System.Net;
+using System.Net.Mail;
 
 namespace MedicalSystemApi.Services.Implements
 {
     public class EmailService : IEmailService
     {
-        private static readonly Random _random = new Random();
+        private readonly IConfiguration _configuration;
 
-        private readonly EmailConfiguration _emailConfiguration;
-
-        public EmailService(EmailConfiguration emailConfiguration)
+        public EmailService(IConfiguration configuration)
         {
-            _emailConfiguration = emailConfiguration;
+            _configuration = configuration;
         }
 
-        public void SendEmail(Message message)
+        public async Task<bool> SendEmailAsync(string toEmail, string subject, string body)
         {
-            var emailMessage = CreateEmailMessage(message);
-            Send(emailMessage);
-        }
-
-        public string GenerateResetToken(string email)
-        {
-            var token = _random.Next(10000000, 99999999).ToString();
-            return token;
-        }
-
-        private MimeMessage CreateEmailMessage(Message message)
-        {
-            var emailMessage = new MimeMessage();
-
-            emailMessage.From.Add(new MailboxAddress("Admin", _emailConfiguration.From));
-            emailMessage.To.AddRange(message.To);
-            emailMessage.Subject = message.Subject;
-            emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Text) { Text = message.Content };
-
-            return emailMessage;
-        }
-
-        private void Send(MimeMessage mimeMessage)
-        {
-            using var client = new SmtpClient();
-
             try
             {
-                client.Connect(_emailConfiguration.SmtpServer, _emailConfiguration.Port, true);
-                client.AuthenticationMechanisms.Remove("XOAUTH2");
-                client.Authenticate(_emailConfiguration.Username, _emailConfiguration.Password);
+                var smtpClient = new SmtpClient(_configuration["EmailSettings:SMTPHost"])
+                {
+                    Port = int.Parse(_configuration["EmailSettings:SMTPPort"]),
+                    Credentials = new NetworkCredential(
+                        _configuration["EmailSettings:SenderEmail"],
+                        _configuration["EmailSettings:SenderPassword"]
+                    ),
+                    EnableSsl = bool.Parse(_configuration["EmailSettings:EnableSSL"])
+                };
 
-                client.Send(mimeMessage);
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_configuration["EmailSettings:SenderEmail"]),
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(toEmail);
+
+                await smtpClient.SendMailAsync(mailMessage);
+                return true;
             }
-            catch
+            catch (Exception ex)
             {
-                throw;
-            }
-            finally
-            {
-                client.Disconnect(true);
-                client.Dispose();
+                Console.WriteLine($"Email error: {ex.Message}");
+                return false;
             }
         }
     }
 }
+

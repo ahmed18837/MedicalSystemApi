@@ -26,7 +26,7 @@ namespace MedicalSystemApi.Migrations
                 .StartsAt(1000L)
                 .IncrementsBy(5);
 
-            modelBuilder.Entity("MedicalSystemApi.Data.ApplicationUser", b =>
+            modelBuilder.Entity("MedicalSystemApi.Models.Entities.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -58,8 +58,8 @@ namespace MedicalSystemApi.Migrations
 
                     b.Property<string>("NationalId")
                         .IsRequired()
-                        .HasMaxLength(14)
-                        .HasColumnType("nvarchar(14)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -78,14 +78,12 @@ namespace MedicalSystemApi.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("ResetCode")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TwoFactorCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("TwoFactorCodeExpiration")
-                        .HasColumnType("datetime2");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -531,17 +529,17 @@ namespace MedicalSystemApi.Migrations
                         },
                         new
                         {
-                            Id = "8e7ce64e-1f00-407b-8ef4-17f826fa01d0",
-                            ConcurrencyStamp = "8e7ce64e-1f00-407b-8ef4-17f826fa01d0",
-                            Name = "SuperAdmin",
-                            NormalizedName = "SUPERADMIN"
-                        },
-                        new
-                        {
                             Id = "77d9a35c-a1b6-4310-a928-e90de8b23eba",
                             ConcurrencyStamp = "77d9a35c-a1b6-4310-a928-e90de8b23eba",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "8e7ce64e-1f00-407b-8ef4-17f826fa01d0",
+                            ConcurrencyStamp = "8e7ce64e-1f00-407b-8ef4-17f826fa01d0",
+                            Name = "SuperAdmin",
+                            NormalizedName = "SUPERADMIN"
                         });
                 });
 
@@ -779,7 +777,7 @@ namespace MedicalSystemApi.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("MedicalSystemApi.Data.ApplicationUser", null)
+                    b.HasOne("MedicalSystemApi.Models.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -788,7 +786,7 @@ namespace MedicalSystemApi.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("MedicalSystemApi.Data.ApplicationUser", null)
+                    b.HasOne("MedicalSystemApi.Models.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -803,7 +801,7 @@ namespace MedicalSystemApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MedicalSystemApi.Data.ApplicationUser", null)
+                    b.HasOne("MedicalSystemApi.Models.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -812,7 +810,7 @@ namespace MedicalSystemApi.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("MedicalSystemApi.Data.ApplicationUser", null)
+                    b.HasOne("MedicalSystemApi.Models.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

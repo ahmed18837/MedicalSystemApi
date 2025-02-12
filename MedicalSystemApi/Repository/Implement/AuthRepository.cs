@@ -1,6 +1,7 @@
-﻿using MedicalSystemApi.Data;
+﻿using MedicalSystemApi.Models.Entities;
 using MedicalSystemApi.Repository.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 
 namespace MedicalSystemApi.Repository.Implement
@@ -14,6 +15,15 @@ namespace MedicalSystemApi.Repository.Implement
         {
             _userManager = userManager;
             _roleManager = roleManager;
+        }
+
+
+        public async Task CreateRoleAsync(string roleName)
+        {
+            if (!await _roleManager.RoleExistsAsync(roleName))
+            {
+                await _roleManager.CreateAsync(new IdentityRole(roleName));
+            }
         }
 
         public async Task<IdentityResult> AddToRoleAsync(ApplicationUser user, string roleName)
@@ -56,6 +66,12 @@ namespace MedicalSystemApi.Repository.Implement
         public async Task<bool> RoleExistsAsync(string roleName)
         {
             return await _roleManager.RoleExistsAsync(roleName);
+        }
+
+        public async Task<bool> PhoneExistsAsync(string phoneNumber)
+        {
+            return await _userManager.Users
+                .AnyAsync(p => p.PhoneNumber == phoneNumber);
         }
     }
 }

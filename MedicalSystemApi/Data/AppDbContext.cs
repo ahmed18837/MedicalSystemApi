@@ -27,6 +27,48 @@ namespace MedicalSystemApi.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Seed Roles 
+
+            var userId = "6b6bf6c9-ae5b-4f19-9676-72aa6112d21b";
+            var doctorId = "f0863c80-1ae5-429a-b991-6a7025a6892c";
+            var adminId = "77d9a35c-a1b6-4310-a928-e90de8b23eba";
+            var superAdminId = "8e7ce64e-1f00-407b-8ef4-17f826fa01d0";
+
+            var roles = new List<IdentityRole>
+         {
+             new IdentityRole
+             {
+                 Id = userId,
+                 ConcurrencyStamp =userId,
+                 Name = "User",
+                 NormalizedName = "User".ToUpper()
+             },
+             new IdentityRole
+             {
+                 Id = doctorId,
+                 ConcurrencyStamp =doctorId,
+                 Name = "Doctor",
+                 NormalizedName = "Doctor".ToUpper()
+             },
+             new IdentityRole
+             {
+                 Id = adminId,
+                 ConcurrencyStamp =adminId,
+                 Name = "Admin",
+                 NormalizedName = "Admin".ToUpper()
+             },
+             new IdentityRole
+             {
+                 Id = superAdminId,
+                 ConcurrencyStamp =superAdminId,
+                 Name = "SuperAdmin",
+                 NormalizedName = "SuperAdmin".ToUpper()
+             }
+                    };
+
+            modelBuilder.Entity<IdentityRole>().HasData(roles);
+
+
             // تخصيص Sequence واحدة لجميع الـ IDs
             modelBuilder.HasSequence<int>("CommonSequence", schema: "dbo")
                 .StartsAt(1000)
@@ -182,49 +224,8 @@ namespace MedicalSystemApi.Data
                 .WithOne(s => s.Department) // كل موظف ينتمي إلى قسم
                 .HasForeignKey(s => s.DepartmentId) // المفتاح الخارجي
                 .OnDelete(DeleteBehavior.Restrict); // التحكم في حذف البيانات (عدم حذف الموظفين عند حذف القسم)
-
-            // Seed Roles 
-
-            var userId = "6b6bf6c9-ae5b-4f19-9676-72aa6112d21b";
-            var doctorId = "f0863c80-1ae5-429a-b991-6a7025a6892c";
-            var adminId = "77d9a35c-a1b6-4310-a928-e90de8b23eba";
-            var superAdminId = "8e7ce64e-1f00-407b-8ef4-17f826fa01d0";
-
-            var roles = new List<IdentityRole>
-            {
-                new IdentityRole
-                {
-                    Id = userId,
-                    ConcurrencyStamp =userId,
-                    Name = "User",
-                    NormalizedName = "User".ToUpper()
-                },
-                new IdentityRole
-                {
-                    Id = doctorId,
-                    ConcurrencyStamp =doctorId,
-                    Name = "Doctor",
-                    NormalizedName = "Doctor".ToUpper()
-                },
-                new IdentityRole
-                {
-                    Id = superAdminId,
-                    ConcurrencyStamp =superAdminId,
-                    Name = "SuperAdmin",
-                    NormalizedName = "SuperAdmin".ToUpper()
-                }
-                ,
-                new IdentityRole
-                {
-                    Id = adminId,
-                    ConcurrencyStamp =adminId,
-                    Name = "Admin",
-                    NormalizedName = "Admin".ToUpper()
-                }
-            };
-
-            modelBuilder.Entity<IdentityRole>().HasData(roles);
         }
+
     }
 }
 

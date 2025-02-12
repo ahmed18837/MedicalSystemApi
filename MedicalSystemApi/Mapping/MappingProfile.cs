@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using MedicalSystemApi.Data;
 using MedicalSystemApi.Models.DTOs.Appointment;
 using MedicalSystemApi.Models.DTOs.Auth;
 using MedicalSystemApi.Models.DTOs.Bill;
@@ -77,7 +76,11 @@ namespace MedicalSystemApi.Mapping
 
 
             CreateMap<RequestRegisterDto, ApplicationUser>()
-           .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email)); // Set UserName = Email
+           .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email)).ReverseMap(); // Set UserName = Email
+
+
+            CreateMap<RequestLoginDto, ApplicationUser>()
+          .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email)).ReverseMap(); // Set UserName = Email
 
         }
     }
