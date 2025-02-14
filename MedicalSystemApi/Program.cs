@@ -10,16 +10,25 @@ using MedicalSystemApi.Services.Implements;
 using MedicalSystemApi.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json.Serialization;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // To Work Patch Action
-builder.Services.AddControllers().AddNewtonsoftJson();
+
+// To 2FACode
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
 
 // Register DI for Connection String
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -40,6 +49,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -55,6 +66,7 @@ builder.Services.AddAuthentication(options =>
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey
@@ -62,7 +74,73 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
-//builder.Services.Configure<EmailConfiguration>(builder.Configuration.GetSection("EmailConfiguration"));
+builder.Services.AddControllers();
+
+// Add Swagger configuration for versioning and JWT support
+builder.Services.AddSwaggerGen(options =>
+{
+    // Swagger setup for multiple API versions
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Medical System API",
+        Version = "v1",
+        Description = "API documentation for Version 1"
+    });
+    options.SwaggerDoc("v2", new OpenApiInfo
+    {
+        Title = "Medical System API",
+        Version = "v2",
+        Description = "API documentation for Version 2"
+    });
+
+    options.SwaggerDoc("v3", new OpenApiInfo
+    {
+        Title = "Medical System API",
+        Version = "v3",
+        Description = "API documentation for Version 3"
+    });
+    // Adding Bearer Token to Swagger 
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Scheme = "Bearer",
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Description = "Enter the JWT token without 'Bearer'"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
+                Scheme = "Oauth2",
+                Name = "Bearer",
+                In = ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    });
+});
+
+builder.Services.AddApiVersioning(options =>
+{
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+});
+
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
@@ -115,21 +193,28 @@ builder.Services.AddSingleton<IWebHostEnvironment>(builder.Environment);
 
 
 builder.Services.AddMemoryCache();
-builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+
+builder.Services.AddAuthorization();
+
 
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionMiddleware>(); // ÊÝÚíá ExceptionMiddleware
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "V1");
+    c.SwaggerEndpoint("/swagger/v2/swagger.json", "V2");
+    c.SwaggerEndpoint("/swagger/v3/swagger.json", "V3");
+
+    c.EnableDeepLinking();
+});
+
 
 app.UseHttpsRedirection();
 

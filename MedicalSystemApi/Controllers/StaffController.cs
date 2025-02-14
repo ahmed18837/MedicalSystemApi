@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
 {
-    [Route("api/[controller]")]
+    [ApiVersion("3.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
+
     public class StaffController : ControllerBase
     {
         private readonly IStaffService _staffService;

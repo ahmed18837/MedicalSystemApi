@@ -82,6 +82,8 @@ namespace MedicalSystemApi.Mapping
             CreateMap<RequestLoginDto, ApplicationUser>()
           .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.Email)).ReverseMap(); // Set UserName = Email
 
+            CreateMap<ApplicationUser, UserDto>().ReverseMap();
+            CreateMap<UpdateUserDto, ApplicationUser>().ReverseMap();
         }
     }
 }

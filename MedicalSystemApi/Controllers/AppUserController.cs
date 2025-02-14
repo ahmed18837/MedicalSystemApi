@@ -1,22 +1,19 @@
 ﻿using MedicalSystemApi.Models.DTOs.Auth;
-using MedicalSystemApi.Models.Entities;
 using MedicalSystemApi.Services.Interfaces;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class AppUserController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly UserManager<ApplicationUser> _userManager;
 
-        public AppUserController(IAuthService authService, UserManager<ApplicationUser> userManager)
+        public AppUserController(IAuthService authService)
         {
             _authService = authService;
-            _userManager = userManager;
         }
 
         [HttpPost("register")]
@@ -62,23 +59,14 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
-        [HttpPost("assign-role")]
-        public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
-        {
-            try
-            {
-                var result = await _authService.AssignRoleAsync(model.Email, model.Role);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
         [HttpPost("forget-password")]
         public async Task<IActionResult> ForgetPassword([FromBody] string email)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var result = await _authService.ForgetPasswordAsync(email);
@@ -93,6 +81,11 @@ namespace MedicalSystemApi.Controllers
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var result = await _authService.ResetPasswordAsync(model);
@@ -104,7 +97,73 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
+        [HttpPost("Send2FACode")]
+        public async Task<IActionResult> SendTwoFactorCode([FromBody] string email)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var result = await _authService.Send2FACodeAsync(email);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
+        [HttpPost("ReSend2FACode")]
+        public async Task<IActionResult> ReSendTwoFactorCode([FromBody] string email)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                var result = await _authService.Resend2FACodeAsync(email);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("Verify2FACode")]
+        public async Task<IActionResult> VerifyTwoFactorCode([FromBody] Verify2FACodeDto model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                string result = await _authService.Verify2FACodeAsync(model);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
+        {
+            try
+            {
+                string result = await _authService.ChangePasswordAsync(model);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
 
