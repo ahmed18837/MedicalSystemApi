@@ -30,7 +30,6 @@ namespace MedicalSystemApi.Mapping
             CreateMap<Patient, PatientDto>().ReverseMap();
             CreateMap<CreatePatientDto, Patient>();
             CreateMap<UpdatePatientDto, Patient>().ReverseMap();
-            CreateMap<Patient, PatchPatientDto>().ReverseMap();
 
             CreateMap<Medication, MedicationDto>().ReverseMap();
             CreateMap<CreateMedicationDto, Medication>();

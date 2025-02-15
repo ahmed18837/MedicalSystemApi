@@ -1,5 +1,6 @@
 ﻿using MedicalSystemApi.Models.DTOs.Auth;
 using MedicalSystemApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
@@ -163,6 +164,14 @@ namespace MedicalSystemApi.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await _authService.LogoutAsync();
+            return Ok("Logged out successfully");
         }
     }
 }

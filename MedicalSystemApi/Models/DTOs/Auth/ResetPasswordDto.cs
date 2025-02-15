@@ -1,18 +1,27 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace MedicalSystemApi.Models.DTOs.Auth
 {
     public class ResetPasswordDto
     {
-        [DataType(DataType.EmailAddress)]
-        [MaxLength(50)]
+
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Invalid email format.")]
+        [MaxLength(50, ErrorMessage = "Email cannot exceed 50 characters.")]
+        [DefaultValue("user@example.com")]
         public string Email { get; set; }
 
-        [MaxLength(8)]
-        public string? ResetCode { get; set; }
+        [Required(ErrorMessage = "Reset Code is required.")]
+        [StringLength(8, MinimumLength = 8, ErrorMessage = "Reset Code must be 8 characters.")]
+        [DefaultValue("12345678")]
+        public string ResetCode { get; set; }
 
+        [Required(ErrorMessage = "New Password is required.")]
         [DataType(DataType.Password)]
-        [MaxLength(50)]
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
+        [MaxLength(64, ErrorMessage = "Password cannot exceed 64 characters.")]
+        [DefaultValue("SecurePass123!")]
         public string NewPassword { get; set; }
     }
 }

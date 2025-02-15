@@ -1,14 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace MedicalSystemApi.Models.DTOs.Auth
 {
     public class Verify2FACodeDto
     {
-        [DataType(DataType.EmailAddress)]
-        [MaxLength(50)]
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Invalid email format.")]
+        [MaxLength(100, ErrorMessage = "Email cannot exceed 100 characters.")]
+        [DefaultValue("user@example.com")]
         public string Email { get; set; }
 
-        [MaxLength(8)]
+        [Required(ErrorMessage = "Code is required.")]
+        [StringLength(8, MinimumLength = 8, ErrorMessage = "Reset Code must be 8 characters.")]
+        [DefaultValue("12345678")]
         public string Code { get; set; }
     }
 }

@@ -19,16 +19,19 @@ namespace MedicalSystemApi.Services.Implements
 
         private readonly UserManager<ApplicationUser> _manager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly JWT _jwt;
         private readonly IAuthRepository _authRepository;
         private readonly IEmailService _emailService;
         private readonly IMapper _mapper;
 
-        public AuthService(IAuthRepository authRepository, UserManager<ApplicationUser> manager, RoleManager<IdentityRole> roleManager
+        public AuthService(IAuthRepository authRepository, UserManager<ApplicationUser> manager, SignInManager<ApplicationUser> signInManager
+            , RoleManager<IdentityRole> roleManager
             , IMapper mapper, IOptions<JWT> jwt, IEmailService emailService)
         {
             _authRepository = authRepository;
             _manager = manager;
+            _signInManager = signInManager;
             _roleManager = roleManager;
             _emailService = emailService;
             _mapper = mapper;
@@ -443,12 +446,16 @@ namespace MedicalSystemApi.Services.Implements
             if (await _roleManager.RoleExistsAsync(roleName))
                 throw new Exception("Role already exists.");
 
+            var concurrencyStamp = Guid.NewGuid().ToString(); // إنشاء قيمة `ConcurrencyStamp` 
+
             var role = new IdentityRole
             {
+                Id = concurrencyStamp,
                 Name = roleName,
                 NormalizedName = roleName.ToUpper(),
-                ConcurrencyStamp = Guid.NewGuid().ToString() // تأكد من تعيين `ConcurrencyStamp`
+                ConcurrencyStamp = concurrencyStamp
             };
+
             var result = await _roleManager.CreateAsync(role);
 
             if (!result.Succeeded)
@@ -458,7 +465,10 @@ namespace MedicalSystemApi.Services.Implements
             }
         }
 
-
+        public async Task LogoutAsync()
+        {
+            await _signInManager.SignOutAsync();
+        }
 
         private async Task<string> CreateJwtToken(ApplicationUser user)
         {

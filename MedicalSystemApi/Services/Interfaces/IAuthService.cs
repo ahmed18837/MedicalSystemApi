@@ -27,5 +27,7 @@ namespace MedicalSystemApi.Services.Interfaces
         Task<string> Resend2FACodeAsync(string email);
 
         Task AddRoleAsync(string roleName);
+
+        Task LogoutAsync();
     }
 }

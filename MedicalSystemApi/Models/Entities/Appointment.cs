@@ -22,11 +22,11 @@ namespace MedicalSystemApi.Models.Entities
         [MaxLength(255)]
         public string Notes { get; set; } // ملاحظات إضافية
 
-        public int? PatientId { get; set; } // Foreign Key (Required: الموعد يجب أن يرتبط بمريض)
+        public int PatientId { get; set; } // Foreign Key (Required: الموعد يجب أن يرتبط بمريض)
 
-        public int? DoctorId { get; set; } // Foreign Key (Required: الموعد يجب أن يرتبط بطبيب)
+        public int DoctorId { get; set; } // Foreign Key (Required: الموعد يجب أن يرتبط بطبيب)
 
-        public int? StaffId { get; set; }
+        public int StaffId { get; set; }
 
         // Navigation Properties
         [ForeignKey("PatientId")]

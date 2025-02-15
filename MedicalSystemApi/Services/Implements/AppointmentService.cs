@@ -196,12 +196,11 @@ namespace MedicalSystemApi.Services.Implements
                 throw new KeyNotFoundException("Doctor not found.");
 
             // Validate StaffId (Optional)
-            if (createDto.StaffId.HasValue)
-            {
-                bool staffExists = await _appointmentRepository.StaffExistsAsync(createDto.StaffId.Value);
-                if (!staffExists)
-                    throw new KeyNotFoundException("Staff not found.");
-            }
+
+            bool staffExists = await _appointmentRepository.StaffExistsAsync(createDto.StaffId);
+            if (!staffExists)
+                throw new KeyNotFoundException("Staff not found.");
+
 
             bool isDoctorBooked = await _appointmentRepository.CheckDoctorAvailabilityAsync(createDto.DoctorId, createDto.Date, createDto.Time);
             if (isDoctorBooked)
