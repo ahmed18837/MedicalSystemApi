@@ -6,25 +6,16 @@ using MedicalSystemApi.Services.Interfaces;
 
 namespace MedicalSystemApi.Services.Implements
 {
-    public class AppointmentService : IAppointmentService
+    public class AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper) : IAppointmentService
     {
-        private readonly IAppointmentRepository _appointmentRepository;
-        private readonly IMapper _mapper;
-
-        public AppointmentService(IAppointmentRepository appointmentRepository, IMapper mapper)
-        {
-            _appointmentRepository = appointmentRepository;
-            _mapper = mapper;
-        }
+        private readonly IAppointmentRepository _appointmentRepository = appointmentRepository;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<IEnumerable<AppointmentDto>> GetAllAsync()
         {
             var appointmentListDto = await _appointmentRepository.GetAllWithDoctorAndPatientAndStaff() ??
                      throw new Exception("There are not Appointment!");
 
-
-
-            // var appointmentListDto = _mapper.Map<IEnumerable<AppointmentDto>>(appointmentList);
             return appointmentListDto;
         }
 
@@ -35,7 +26,6 @@ namespace MedicalSystemApi.Services.Implements
             var appointmentDto = await _appointmentRepository.GetByIdWithDoctorAndPatientAndStaff(id) ??
                 throw new InvalidOperationException("Appointment not fount!");
 
-            //var appointmentDto = _mapper.Map<AppointmentDto>(appointment);
             return appointmentDto;
         }
 
@@ -58,30 +48,17 @@ namespace MedicalSystemApi.Services.Implements
             await _appointmentRepository.DeleteAsync(id);
         }
 
-
-
-
         public async Task<IEnumerable<AppointmentDto>> GetAppointmentsByPatientIdAsync(int patientId)
         {
             if (patientId <= 0)
                 throw new ArgumentException("Invalid PatientId");
 
-            var appointments = await _appointmentRepository.GetAppointmentsByPatientIdAsync(patientId);
+            var appointmentsDto = await _appointmentRepository.GetAppointmentsByPatientIdAsync(patientId);
 
-            if (!appointments.Any())
+            if (!appointmentsDto.Any() || appointmentsDto == null)
                 throw new Exception($"No appointments found for PatientId: {patientId}");
 
-            return appointments.Select(a => new AppointmentDto
-            {
-                Id = a.Id,
-                Date = a.Date,
-                Time = a.Time,
-                Status = a.Status,
-                Notes = a.Notes,
-                PatientName = a.Patient != null ? a.Patient.FullName : "Unknown",
-                DoctorName = a.Doctor != null ? a.Doctor.FullName : "Unknown",
-                StaffName = a.Staff != null ? a.Staff.FullName : "N/A"
-            });
+            return appointmentsDto;
         }
 
         public async Task<IEnumerable<AppointmentDto>> GetAppointmentsByDoctorIdAsync(int doctorId)
@@ -89,22 +66,12 @@ namespace MedicalSystemApi.Services.Implements
             if (doctorId <= 0)
                 throw new ArgumentException("Invalid DoctorId.");
 
-            var appointments = await _appointmentRepository.GetAppointmentsByDoctorIdAsync(doctorId);
+            var appointmentsDto = await _appointmentRepository.GetAppointmentsByDoctorIdAsync(doctorId);
 
-            if (!appointments.Any())
+            if (!appointmentsDto.Any() || appointmentsDto == null)
                 throw new Exception($"No appointments found for DoctorId: {doctorId}");
 
-            return appointments.Select(a => new AppointmentDto
-            {
-                Id = a.Id,
-                Date = a.Date,
-                Time = a.Time,
-                Status = a.Status,
-                Notes = a.Notes,
-                PatientName = a.Patient != null ? a.Patient.FullName : "Unknown",
-                DoctorName = a.Doctor != null ? a.Doctor.FullName : "Unknown",
-                StaffName = a.Staff != null ? a.Staff.FullName : "N/A"
-            });
+            return appointmentsDto;
         }
 
         public async Task<string> CheckDoctorAvailabilityAsync(int doctorId, DateTime date, TimeSpan time)
@@ -132,27 +99,7 @@ namespace MedicalSystemApi.Services.Implements
             await _appointmentRepository.UpdateAppointmentStatusAsync(appointmentId, status);
         }
 
-        public async Task<IEnumerable<AppointmentDto>> GetUpcomingAppointmentsAsync()
-        {
-            var appointments = await _appointmentRepository.GetUpcomingAppointmentsAsync();
-
-            if (!appointments.Any())
-                throw new Exception("No upcoming appointments found.");
-
-            return appointments.Select(a => new AppointmentDto
-            {
-                Id = a.Id,
-                Date = a.Date,
-                Time = a.Time,
-                Status = a.Status,
-                Notes = a.Notes,
-                PatientName = a.Patient != null ? a.Patient.FullName : "Unknown",
-                DoctorName = a.Doctor != null ? a.Doctor.FullName : "Unknown",
-                StaffName = a.Staff != null ? a.Staff.FullName : "N/A"
-            });
-        }
-
-        public async Task ValidationForAppointment(UpdateAppointmentDto updateAppointmentDto)
+        private async Task ValidationForAppointment(UpdateAppointmentDto updateAppointmentDto)
         {
             if (!await _appointmentRepository.PatientExistsAsync(updateAppointmentDto.PatientId))
             {
@@ -220,5 +167,14 @@ namespace MedicalSystemApi.Services.Implements
             await _appointmentRepository.AddAsync(appointment);
         }
 
+        public async Task<IEnumerable<AppointmentDto>> GetFilteredAppointmentsAsync(AppointmentFilterDto filterDto)
+        {
+            var appointmentsDto = await _appointmentRepository.GetFilteredAppointmentsAsync(filterDto);
+
+            if (appointmentsDto == null && !appointmentsDto!.Any())
+                throw new Exception("No appointments found matching the given criteria.");
+
+            return appointmentsDto;
+        }
     }
 }

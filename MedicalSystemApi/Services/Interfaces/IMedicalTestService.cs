@@ -14,5 +14,7 @@ namespace MedicalSystemApi.Services.Interfaces
         Task<IEnumerable<MedicalTestDto>> SearchMedicalTests(string searchTerm);
         Task AssignMedicalTestToBill(int testId, int billId);
         Task UpdateMedicalTestCost(int testId, decimal newCost);
+
+        Task<IEnumerable<MedicalTestDto>> GetFilteredMedicalTestsAsync(MedicalTestFilterDto filterDto);
     }
 }

@@ -1,4 +1,4 @@
-using MedicalSystemApi.Data;
+ï»¿using MedicalSystemApi.Data;
 using MedicalSystemApi.Exceptions;
 using MedicalSystemApi.Helpers;
 using MedicalSystemApi.Mapping;
@@ -40,15 +40,14 @@ builder.Services.Configure<JWT>(builder.Configuration.GetSection(("Jwt")));
 // Add Identity services
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    options.Password.RequireDigit = true; //  íÊØáÈ ÑŞã
-    options.Password.RequireLowercase = false; // ? áÇ íÊØáÈ ÍÑİğÇ ÕÛíÑğÇ
-    options.Password.RequireUppercase = false; // ? áÇ íÊØáÈ ÍÑİğÇ ßÈíÑğÇ
-    options.Password.RequireNonAlphanumeric = false; // ? áÇ íÊØáÈ ÑãÒğÇ ÎÇÕğÇ (@, #, !)
-    options.Password.RequiredLength = 8; // ÇáÍÏ ÇáÃÏäì áØæá ßáãÉ ÇáãÑæÑ (íãßäß ÊÛííÑå)
+    options.Password.RequireDigit = true; //  ÙŠØªØ·Ù„Ø¨ Ø±Ù‚Ù…
+    options.Password.RequireLowercase = false; // ? Ù„Ø§ ÙŠØªØ·Ù„Ø¨ Ø­Ø±ÙÙ‹Ø§ ØµØºÙŠØ±Ù‹Ø§
+    options.Password.RequireUppercase = false; // ? Ù„Ø§ ÙŠØªØ·Ù„Ø¨ Ø­Ø±ÙÙ‹Ø§ ÙƒØ¨ÙŠØ±Ù‹Ø§
+    options.Password.RequireNonAlphanumeric = false; // ? Ù„Ø§ ÙŠØªØ·Ù„Ø¨ Ø±Ù…Ø²Ù‹Ø§ Ø®Ø§ØµÙ‹Ø§ (@, #, !)
+    options.Password.RequiredLength = 8; // Ø§Ù„Ø­Ø¯ Ø§Ù„Ø£Ø¯Ù†Ù‰ Ù„Ø·ÙˆÙ„ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± (ÙŠÙ…ÙƒÙ†Ùƒ ØªØºÙŠÙŠØ±Ù‡)
 })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
-
 
 
 builder.Services.AddAuthentication(options =>
@@ -58,19 +57,17 @@ builder.Services.AddAuthentication(options =>
 })
     .AddJwtBearer(o =>
     {
-        o.RequireHttpsMetadata = false;
-        o.SaveToken = false;
         o.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey
-            (Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+            (Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+            //RoleClaimType = ClaimTypes.Role
         };
     });
 
@@ -184,15 +181,19 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 
+
 // Register AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddTransient<IFileService, FileService>();
 
 builder.Services.AddSingleton<IWebHostEnvironment>(builder.Environment);
-
-
+// to search for image
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddMemoryCache();
+
+builder.Services.AddResponseCaching();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
@@ -202,7 +203,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-app.UseMiddleware<ExceptionMiddleware>(); // ÊİÚíá ExceptionMiddleware
+app.UseMiddleware<ExceptionMiddleware>(); // ØªÙØ¹ÙŠÙ„ ExceptionMiddleware
 
 app.UseSwagger();
 
@@ -215,9 +216,9 @@ app.UseSwaggerUI(c =>
     c.EnableDeepLinking();
 });
 
-
+app.UseStaticFiles(); // ÙŠØ³Ù…Ø­ Ø¨Ø¹Ø±Ø¶ Ø§Ù„ØµÙˆØ± Ù…Ù† wwwroot
 app.UseHttpsRedirection();
-
+app.UseResponseCaching();
 app.UseAuthentication();
 app.UseAuthorization();
 

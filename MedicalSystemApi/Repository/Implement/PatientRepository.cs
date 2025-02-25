@@ -1,4 +1,5 @@
 ﻿using MedicalSystemApi.Data;
+using MedicalSystemApi.Models.DTOs.Patient;
 using MedicalSystemApi.Models.Entities;
 using MedicalSystemApi.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -6,13 +7,10 @@ using System.Text.RegularExpressions;
 
 namespace MedicalSystemApi.Repository.Implement
 {
-    public class PatientRepository : GenericRepository<Patient>, IPatientRepository
+    public class PatientRepository(AppDbContext dbContext) : GenericRepository<Patient>(dbContext), IPatientRepository
     {
-        private readonly AppDbContext _dbContext;
-        public PatientRepository(AppDbContext dbContext) : base(dbContext)
-        {
-            _dbContext = dbContext;
-        }
+        private readonly AppDbContext _dbContext = dbContext;
+
         public async Task<bool> IsPhoneNumberValid(string phoneNumber)
         {
             var egyptPhonePattern = @"^\+20\d{10}$";
@@ -62,9 +60,6 @@ namespace MedicalSystemApi.Repository.Implement
 
         public async Task<IEnumerable<Patient>> SearchPatientsByNameAsync(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Search name cannot be empty.");
-
             return await _dbContext.Patients
                 .Where(p => p.FullName.Contains(name))
                 .ToListAsync();
@@ -80,6 +75,31 @@ namespace MedicalSystemApi.Repository.Implement
             _dbContext.Patients.Update(patient);
             await _dbContext.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<IEnumerable<Patient>> GetFilteredPatientsAsync(PatientFilterDto filterDto)
+        {
+            var query = _dbContext.Patients.AsQueryable();
+
+            if (!string.IsNullOrEmpty(filterDto.FullName))
+                query = query.Where(p => p.FullName.Contains(filterDto.FullName));
+
+            if (!string.IsNullOrEmpty(filterDto.Gender))
+                query = query.Where(p => EF.Functions.Like(p.Gender, filterDto.Gender));
+
+            if (filterDto.DateOfBirthFrom.HasValue)
+                query = query.Where(p => p.DateOfBirth >= filterDto.DateOfBirthFrom.Value);
+
+            if (filterDto.DateOfBirthTo.HasValue)
+                query = query.Where(p => p.DateOfBirth <= filterDto.DateOfBirthTo.Value);
+
+            if (filterDto.MedicalHistoryDateFrom.HasValue)
+                query = query.Where(p => p.MedicalHistoryDate >= filterDto.MedicalHistoryDateFrom.Value);
+
+            if (filterDto.MedicalHistoryDateTo.HasValue)
+                query = query.Where(p => p.MedicalHistoryDate <= filterDto.MedicalHistoryDateTo.Value);
+
+            return await query.ToListAsync();
         }
     }
 }

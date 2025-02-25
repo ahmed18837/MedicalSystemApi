@@ -1,4 +1,5 @@
 ﻿using MedicalSystemApi.Data;
+using MedicalSystemApi.Models.DTOs.Staff;
 using MedicalSystemApi.Models.Entities;
 using MedicalSystemApi.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -6,28 +7,61 @@ using System.Text.RegularExpressions;
 
 namespace MedicalSystemApi.Repository.Implement
 {
-    public class StaffRepository : GenericRepository<Staff>, IStaffRepository
+    public class StaffRepository(AppDbContext dbContext) : GenericRepository<Staff>(dbContext), IStaffRepository
     {
-        private readonly AppDbContext _dbContext;
-        public StaffRepository(AppDbContext dbContext) : base(dbContext)
-        {
-            _dbContext = dbContext;
-        }
+        private readonly AppDbContext _dbContext = dbContext;
 
-        public async Task<IEnumerable<Staff>> GetAllWithDepartmentNameAsync()
+        public async Task<IEnumerable<StaffDto>> GetAllWithDepartmentNameAsync()
         {
             return await _dbContext.Staffs
-             .AsNoTracking()
-            .Include(s => s.Department)
+             .AsNoTrackingWithIdentityResolution()
+            .Select(s => new StaffDto
+            {
+                FullName = s.FullName,
+                RoleStaff = s.RoleStaff,
+                Phone = s.Phone,
+                Email = s.Email,
+                HireDate = s.HireDate,
+                DepartmentName = s.Department.Name, // تضمين اسم القسم
+                ImagePath = s.ImagePath ?? string.Empty
+            })
             .ToListAsync();
         }
 
-        public async Task<Staff> GetStaffWithDepartmentAsync(int id)
+        public async Task<StaffDto> GetStaffWithDepartmentAsync(int id)
         {
             return await _dbContext.Staffs
-            .AsNoTracking()
-            .Include(s => s.Department)
-            .FirstOrDefaultAsync(s => s.Id == id);
+                .Where(s => s.Id == id)
+             .AsNoTrackingWithIdentityResolution()
+            .Select(s => new StaffDto
+            {
+                FullName = s.FullName,
+                RoleStaff = s.RoleStaff,
+                Phone = s.Phone,
+                Email = s.Email,
+                HireDate = s.HireDate,
+                DepartmentName = s.Department.Name, // تضمين اسم القسم
+                ImagePath = s.ImagePath ?? string.Empty
+            })
+            .FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<StaffDto>> GetStaffWithDepartmentIdAsync(int departmentId)
+        {
+            return await _dbContext.Staffs
+                .Where(s => s.DepartmentId == departmentId)
+             .AsNoTrackingWithIdentityResolution()
+            .Select(s => new StaffDto
+            {
+                FullName = s.FullName,
+                RoleStaff = s.RoleStaff,
+                Phone = s.Phone,
+                Email = s.Email,
+                HireDate = s.HireDate,
+                DepartmentName = s.Department.Name, // تضمين اسم القسم
+                ImagePath = s.ImagePath ?? string.Empty
+            })
+            .ToListAsync();
         }
 
         public async Task<bool> EmailExistsAsync(string email)
@@ -68,14 +102,6 @@ namespace MedicalSystemApi.Repository.Implement
         {
             return await _dbContext.Staffs
                 .AnyAsync(p => p.Phone == phoneNumber);
-        }
-
-        public async Task<IEnumerable<Staff>> GetStaffByDepartmentAsync(int departmentId)
-        {
-            return await _dbContext.Staffs
-                .Include(s => s.Department)
-                .Where(s => s.DepartmentId == departmentId)
-                .ToListAsync();
         }
 
         public async Task<Dictionary<string, int>> GetStaffCountByRoleAsync()
@@ -149,6 +175,30 @@ namespace MedicalSystemApi.Repository.Implement
             }
             _dbContext.Update(staff);
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Staff>> GetFilteredStaffAsync(StaffFilterDto filterDto)
+        {
+            var query = _dbContext.Staffs
+                .Include(s => s.Department)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(filterDto.FullName))
+                query = query.Where(s => s.FullName.Contains(filterDto.FullName));
+
+            if (!string.IsNullOrEmpty(filterDto.RoleStaff))
+                query = query.Where(s => s.RoleStaff.ToLower() == filterDto.RoleStaff.ToLower());
+
+            if (filterDto.HireDateFrom.HasValue)
+                query = query.Where(s => s.HireDate >= filterDto.HireDateFrom.Value);
+
+            if (filterDto.HireDateTo.HasValue)
+                query = query.Where(s => s.HireDate <= filterDto.HireDateTo.Value);
+
+            if (filterDto.DepartmentId.HasValue)
+                query = query.Where(s => s.DepartmentId == filterDto.DepartmentId);
+
+            return await query.ToListAsync();
         }
     }
 }

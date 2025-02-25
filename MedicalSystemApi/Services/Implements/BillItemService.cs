@@ -114,5 +114,16 @@ namespace MedicalSystemApi.Services.Implements
             if (!updateSuccessful)
                 throw new Exception("Failed to update BillItem");
         }
+
+        public async Task<IEnumerable<BillItemDto>> GetFilteredBillItemsAsync(BillItemFilterDto filterDto)
+        {
+            var billItems = await _billItemRepository.GetFilteredBillItemsAsync(filterDto);
+
+            if (billItems == null && !billItems!.Any())
+                throw new Exception("No billItems found matching the given criteria.");
+
+            var billItemsDto = _mapper.Map<IEnumerable<BillItemDto>>(billItems);
+            return billItemsDto;
+        }
     }
 }

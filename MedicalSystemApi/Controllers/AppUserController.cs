@@ -1,6 +1,7 @@
 ﻿using MedicalSystemApi.Models.DTOs.Auth;
+using MedicalSystemApi.Models.Entities;
 using MedicalSystemApi.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
@@ -8,14 +9,11 @@ namespace MedicalSystemApi.Controllers
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersion("1.0")]
-    public class AppUserController : ControllerBase
+    public class AppUserController(IAuthService authService, SignInManager<ApplicationUser> signInManager) : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly IAuthService _authService = authService;
+        private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
 
-        public AppUserController(IAuthService authService)
-        {
-            _authService = authService;
-        }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RequestRegisterDto request)
@@ -60,8 +58,8 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
-        [HttpPost("forget-password")]
-        public async Task<IActionResult> ForgetPassword([FromBody] string email)
+        [HttpPost("forget-password{email}")]
+        public async Task<IActionResult> ForgetPassword(string email)
         {
             if (!ModelState.IsValid)
             {
@@ -98,8 +96,8 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
-        [HttpPost("Send2FACode")]
-        public async Task<IActionResult> SendTwoFactorCode([FromBody] string email)
+        [HttpPost("Send2FACode{email}")]
+        public async Task<IActionResult> SendTwoFactorCode(string email)
         {
             if (!ModelState.IsValid)
             {
@@ -116,8 +114,8 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
-        [HttpPost("ReSend2FACode")]
-        public async Task<IActionResult> ReSendTwoFactorCode([FromBody] string email)
+        [HttpPost("ReSend2FACode{email}")]
+        public async Task<IActionResult> ReSendTwoFactorCode(string email)
         {
             if (!ModelState.IsValid)
             {
@@ -164,14 +162,6 @@ namespace MedicalSystemApi.Controllers
             {
                 return BadRequest(ex.Message);
             }
-        }
-
-        [Authorize]
-        [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
-        {
-            await _authService.LogoutAsync();
-            return Ok("Logged out successfully");
         }
     }
 }

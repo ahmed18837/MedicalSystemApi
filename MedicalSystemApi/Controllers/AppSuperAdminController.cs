@@ -1,5 +1,6 @@
 ﻿using MedicalSystemApi.Models.DTOs.Auth;
 using MedicalSystemApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
@@ -7,14 +8,10 @@ namespace MedicalSystemApi.Controllers
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersion("1.0")]
-    public class AppSuperAdminController : ControllerBase
+    [Authorize(Roles = "SuperAdmin")]
+    public class AppSuperAdminController(IAuthService authService) : ControllerBase
     {
-        private readonly IAuthService _authService;
-
-        public AppSuperAdminController(IAuthService authService)
-        {
-            _authService = authService;
-        }
+        private readonly IAuthService _authService = authService;
 
         [HttpPost("assign-role")]
         public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
@@ -36,8 +33,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("UpdateRole")]
+
         public async Task<IActionResult> UpdateRole([FromBody] UpdateRoleDto model)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _authService.UpdateRoleAsync(model);
@@ -48,7 +51,6 @@ namespace MedicalSystemApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
-
 
         [HttpDelete("DeleteRole/{roleName}")]
         public async Task<IActionResult> DeleteRole(string roleName)
@@ -69,7 +71,6 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPost("unlock-user")]
-        //[Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> UnlockUser(string email)
         {
             if (!ModelState.IsValid)
@@ -88,7 +89,6 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPost("add-role")]
-        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddRole(string RoleName)
         {
             if (!ModelState.IsValid)
@@ -98,7 +98,7 @@ namespace MedicalSystemApi.Controllers
             try
             {
                 await _authService.AddRoleAsync(RoleName);
-                return NoContent();
+                return Created();
             }
             catch (Exception ex)
             {
@@ -106,5 +106,61 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
+        [HttpDelete("RemoveUserFromRole")]
+        public async Task<IActionResult> RemoveUserFromRole([FromQuery] string email, [FromQuery] string role)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                string result = await _authService.RemoveUserFromRoleAsync(email, role);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("AddUser")]
+        public async Task<IActionResult> AddUser([FromBody] AddUserDto userDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            try
+            {
+                string result = await _authService.AddUserAsync(userDto, userDto.Password, userDto.Role);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("DeleteUser")]
+        public async Task<IActionResult> DeleteUser([FromQuery] string email)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var result = await _authService.DeleteUserAsync(email);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

@@ -5,12 +5,14 @@ namespace MedicalSystemApi.Services.Implements
     public class FileService : IFileService
     {
         private readonly IWebHostEnvironment _environment;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly string _baseUploadPath;
 
-        public FileService(IWebHostEnvironment environment)
+        public FileService(IWebHostEnvironment environment, IHttpContextAccessor httpContextAccessor)
         {
             _environment = environment;
             _baseUploadPath = Path.Combine(_environment.WebRootPath, "Images");
+            _httpContextAccessor = httpContextAccessor;
 
             if (!Directory.Exists(_baseUploadPath))
             {
@@ -51,8 +53,12 @@ namespace MedicalSystemApi.Services.Implements
             {
                 file.CopyTo(stream);
             }
+            // احصل على عنوان الموقع الحالي
+            var request = _httpContextAccessor.HttpContext?.Request;
+            var baseUrl = $"{request?.Scheme}://{request?.Host}";
 
-            return Path.Combine("Images", category, fileName).Replace("\\", "/");
+            // إنشاء الرابط الكامل للصورة
+            return $"{baseUrl}/Images/{category}/{fileName}";
         }
 
         public async Task DeleteFileAsync(string relativePath)
@@ -75,10 +81,10 @@ namespace MedicalSystemApi.Services.Implements
                     throw new IOException($"Error occurred while deleting the file: {fullPath}");
                 }
             }
-            else
-            {
-                throw new FileNotFoundException($"File not found: {fullPath}");
-            }
+            //else
+            //{
+            //    throw new FileNotFoundException($"File not found: {fullPath}");
+            //}
         }
     }
 }

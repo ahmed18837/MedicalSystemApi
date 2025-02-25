@@ -17,5 +17,7 @@ namespace MedicalSystemApi.Services.Interfaces
         Task<IEnumerable<PatientDto>> GetPatientsAdmittedInLastYearAsync(int year);
         Task<IEnumerable<PatientDto>> SearchPatientsByNameAsync(string name);
         Task UpdatePatientPhoneAsync(int patientId, string newPhone);
+        // Filtering
+        Task<IEnumerable<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filterDto);
     }
 }

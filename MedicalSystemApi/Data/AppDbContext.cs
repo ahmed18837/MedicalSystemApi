@@ -5,10 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MedicalSystemApi.Data
 {
-    public class AppDbContext : IdentityDbContext<ApplicationUser>
+    public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<ApplicationUser>(options)
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
@@ -131,6 +129,8 @@ namespace MedicalSystemApi.Data
                 .HasDefaultValueSql("NEXT VALUE FOR dbo.CommonSequence");
 
 
+            //modelBuilder.Entity<BlacklistedToken>().ToTable("BlacklistedToken");
+
             // Relationships
 
             // Patient ➡ Appointments (Optional) (One-Many)
@@ -145,35 +145,35 @@ namespace MedicalSystemApi.Data
                 .HasMany(p => p.MedicalRecords)
                 .WithOne(m => m.Patient)
                 .HasForeignKey(m => m.PatientId)
-                .IsRequired();
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Doctor ➡ Appointments (Optional) (One-Many)
             modelBuilder.Entity<Doctor>()
                 .HasMany(a => a.Appointments)
                 .WithOne(d => d.Doctor)
                 .HasForeignKey(d => d.DoctorId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Doctor → MedicalRecords (Required)
             modelBuilder.Entity<Doctor>()
                 .HasMany(d => d.MedicalRecords)
                 .WithOne(m => m.Doctor)
                 .HasForeignKey(m => m.DoctorId)
-                .IsRequired();
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Doctor ➡ Department (Required) (One-Many)
             modelBuilder.Entity<Doctor>()
                 .HasOne(d => d.Department)
                 .WithMany(dept => dept.Doctors)
                 .HasForeignKey(d => d.DepartmentId)
-                .IsRequired();
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Staff -> Appointments (Optional)
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.Staff)
                 .WithMany(s => s.Appointments)
                 .HasForeignKey(a => a.StaffId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Staff -> Bills (Optional)
             //modelBuilder.Entity<Bill>()

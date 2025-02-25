@@ -1,17 +1,14 @@
 ﻿using MedicalSystemApi.Data;
+using MedicalSystemApi.Models.DTOs.Medication;
 using MedicalSystemApi.Models.Entities;
 using MedicalSystemApi.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MedicalSystemApi.Repository.Implement
 {
-    public class MedicationRepository : GenericRepository<Medication>, IMedicationRepository
+    public class MedicationRepository(AppDbContext dbContext) : GenericRepository<Medication>(dbContext), IMedicationRepository
     {
-        private readonly AppDbContext _dbContext;
-        public MedicationRepository(AppDbContext dbContext) : base(dbContext)
-        {
-            _dbContext = dbContext;
-        }
+        private readonly AppDbContext _dbContext = dbContext;
 
         public async Task<IEnumerable<Medication>> GetMedicationsByDosageRangeAsync(string minDosage, string maxDosage)
         {
@@ -59,6 +56,28 @@ namespace MedicalSystemApi.Repository.Implement
             medication.Instructions = instructions;
             await _dbContext.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<IEnumerable<Medication>> GetFilteredMedicationsAsync(MedicationFilterDto filterDto)
+        {
+            var query = _dbContext.Medications.AsQueryable();
+
+            if (!string.IsNullOrEmpty(filterDto.Name))
+                query = query.Where(m => EF.Functions.Like(m.Name, $"%{filterDto.Name}%"));
+
+            if (!string.IsNullOrEmpty(filterDto.Dosage))
+                query = query.Where(m => EF.Functions.Like(m.Dosage, $"%{filterDto.Dosage}%"));
+
+            if (!string.IsNullOrEmpty(filterDto.Frequency))
+                query = query.Where(m => EF.Functions.Like(m.Frequency, $"%{filterDto.Frequency}%"));
+
+            if (!string.IsNullOrEmpty(filterDto.Route))
+                query = query.Where(m => EF.Functions.Like(m.Route, $"%{filterDto.Route}%"));
+
+            if (filterDto.MedicalRecordId.HasValue)
+                query = query.Where(m => m.MedicalRecordId == filterDto.MedicalRecordId);
+
+            return await query.ToListAsync();
         }
     }
 }

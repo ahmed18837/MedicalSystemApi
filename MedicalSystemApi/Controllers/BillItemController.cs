@@ -1,5 +1,6 @@
 ﻿using MedicalSystemApi.Models.DTOs.BillItem;
 using MedicalSystemApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
@@ -8,18 +9,20 @@ namespace MedicalSystemApi.Controllers
     [ApiController]
     [ApiVersion("2.0")]
 
-    public class BillItemController : ControllerBase
+    public class BillItemController(IBillItemService billItemService) : ControllerBase
     {
-        private readonly IBillItemService _billItemService;
-
-        public BillItemController(IBillItemService billItemService)
-        {
-            _billItemService = billItemService;
-        }
+        private readonly IBillItemService _billItemService = billItemService;
 
         [HttpGet("AllBillItems")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetAll()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var billItemList = await _billItemService.GetAllAsync();
@@ -32,6 +35,8 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetById(int id)
         {
             try
@@ -51,6 +56,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPost("AddBillItem")]
+        [Authorize(Roles = "SuperAdmin, Doctor")]
         public async Task<IActionResult> Add(CreateBillItemDto createBillItemDto)
         {
             try
@@ -70,6 +76,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateBillItemDto updateBillItemDto)
         {
             try
@@ -89,8 +96,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Delete(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _billItemService.DeleteAsync(id);
@@ -103,8 +116,15 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("bill/{billId}")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetBillItemsByBillId(int billId)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var billItems = await _billItemService.GetBillItemsByBillIdAsync(billId);
@@ -117,8 +137,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("update-price/{billItemId}")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> UpdateBillItemPrice(int billItemId, decimal unitPrice, int quantity)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _billItemService.UpdateBillItemPriceAsync(billItemId, unitPrice, quantity);
@@ -130,5 +156,25 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
+        [HttpGet("Filtering")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
+        public async Task<IActionResult> GetFilteredBillItems([FromQuery] BillItemFilterDto filterDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var result = await _billItemService.GetFilteredBillItemsAsync(filterDto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

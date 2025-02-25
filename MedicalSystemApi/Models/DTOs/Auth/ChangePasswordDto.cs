@@ -14,14 +14,15 @@ namespace MedicalSystemApi.Models.DTOs.Auth
         [Required(ErrorMessage = "Current password is required.")]
         [DataType(DataType.Password)]
         [MaxLength(64, ErrorMessage = "Password cannot exceed 64 characters.")]
-        [DefaultValue("SecurePass123!")]
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
+        [DefaultValue("SecurePass123")]
         public string CurrentPassword { get; set; }
 
         [Required(ErrorMessage = "New password is required.")]
         [DataType(DataType.Password)]
         [MaxLength(64, ErrorMessage = "Password cannot exceed 64 characters.")]
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
-        [DefaultValue("SecurePass123!")]
+        [DefaultValue("SecurePass123")]
         public string NewPassword { get; set; }
     }
 }

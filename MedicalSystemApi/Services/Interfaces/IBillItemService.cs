@@ -12,5 +12,7 @@ namespace MedicalSystemApi.Services.Interfaces
 
         Task<IEnumerable<BillItemDto>> GetBillItemsByBillIdAsync(int billId);
         Task UpdateBillItemPriceAsync(int billItemId, decimal unitPrice, int quantity);
+
+        Task<IEnumerable<BillItemDto>> GetFilteredBillItemsAsync(BillItemFilterDto filterDto);
     }
 }

@@ -7,7 +7,7 @@ namespace MedicalSystemApi.Models.DTOs.Doctor
     {
         [Required(ErrorMessage = "Full name is required.")]
         [MaxLength(100, ErrorMessage = "Full name cannot exceed 100 characters.")]
-        [DefaultValue("Dr. John Doe")] // قيمة افتراضية
+        [DefaultValue("FullName")] // قيمة افتراضية
         public string FullName { get; set; }
 
         [Required(ErrorMessage = "Age is required.")]

@@ -83,6 +83,8 @@ namespace MedicalSystemApi.Mapping
 
             CreateMap<ApplicationUser, UserDto>().ReverseMap();
             CreateMap<UpdateUserDto, ApplicationUser>().ReverseMap();
+
+            CreateMap<AddUserDto, ApplicationUser>();
         }
     }
 }

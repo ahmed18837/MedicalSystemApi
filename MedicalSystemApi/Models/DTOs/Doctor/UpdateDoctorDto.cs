@@ -7,7 +7,7 @@ namespace MedicalSystemApi.Models.DTOs.Doctor
     {
         [Required(ErrorMessage = "Full name is required.")]
         [MaxLength(100, ErrorMessage = "Full name cannot exceed 100 characters.")]
-        [DefaultValue("Dr. John Doe")] // قيمة افتراضية
+        [DefaultValue("FullName")] // قيمة افتراضية
         public string FullName { get; set; }
 
         [Required(ErrorMessage = "Age is required.")]
@@ -37,8 +37,9 @@ namespace MedicalSystemApi.Models.DTOs.Doctor
         public string WorkingHours { get; set; }
 
         [Required(ErrorMessage = "Department ID is required.")]
-        [DefaultValue(2)] // قيمة افتراضية
+        [DefaultValue(1111)] // قيمة افتراضية
         public int DepartmentId { get; set; }
         public IFormFile? Image { get; set; }
     }
 }
+

@@ -14,6 +14,7 @@ namespace MedicalSystemApi.Services.Interfaces
         Task<IEnumerable<AppointmentDto>> GetAppointmentsByDoctorIdAsync(int doctorId);
         Task<string> CheckDoctorAvailabilityAsync(int doctorId, DateTime date, TimeSpan time);
         Task UpdateAppointmentStatusAsync(int appointmentId, string status);
-        Task<IEnumerable<AppointmentDto>> GetUpcomingAppointmentsAsync();
+
+        Task<IEnumerable<AppointmentDto>> GetFilteredAppointmentsAsync(AppointmentFilterDto filterDto);
     }
 }

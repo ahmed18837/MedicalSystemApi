@@ -20,6 +20,7 @@ namespace MedicalSystemApi.Services.Interfaces
         Task UpdateUserAsync(string Id, UpdateUserDto model);
 
         Task<IEnumerable<string>> GetAllRolesAsync();
+        Task<IEnumerable<string>> GetRolesByEmailAsync(string email);
         Task DeleteRoleAsync(string roleName);
         Task<IEnumerable<UserDto>> GetUsersByRoleAsync(string roleName);
 
@@ -27,7 +28,9 @@ namespace MedicalSystemApi.Services.Interfaces
         Task<string> Resend2FACodeAsync(string email);
 
         Task AddRoleAsync(string roleName);
-
         Task LogoutAsync();
+        Task<string> RemoveUserFromRoleAsync(string email, string role);
+        Task<string> AddUserAsync(AddUserDto userDto, string password, string role);
+        Task<string> DeleteUserAsync(string email);
     }
 }

@@ -32,14 +32,14 @@ namespace MedicalSystemApi.Models.Entities
         public string WorkingHours { get; set; } // ساعات العمل
 
         [Required]
-        public int? DepartmentId { get; set; } // Foreign Key (Required: الطبيب ينتمي لقسم محدد)
+        public int DepartmentId { get; set; } // Foreign Key (Required: الطبيب ينتمي لقسم محدد)
 
         public string? ImagePath { get; set; }
 
         // Navigation Properties
         [ForeignKey("DepartmentId")]
-        public Department? Department { get; set; } // Required
-        public ICollection<Appointment>? Appointments { get; set; } // Optional: طبيب قد لا يكون لديه مواعيد
+        public Department Department { get; set; } // Required
+        public ICollection<Appointment> Appointments { get; set; } // Optional: طبيب قد لا يكون لديه مواعيد
         public ICollection<MedicalRecord> MedicalRecords { get; set; } // Required: كل سجل طبي يرتبط بطبيب
     }
 }

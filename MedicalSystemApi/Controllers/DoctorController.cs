@@ -1,5 +1,6 @@
 ﻿using MedicalSystemApi.Models.DTOs.Doctor;
 using MedicalSystemApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
@@ -8,18 +9,20 @@ namespace MedicalSystemApi.Controllers
     [ApiController]
     [ApiVersion("2.0")]
 
-    public class DoctorController : ControllerBase
+    public class DoctorController(IDoctorService doctorService) : ControllerBase
     {
-        private readonly IDoctorService _doctorService;
-
-        public DoctorController(IDoctorService doctorService)
-        {
-            _doctorService = doctorService;
-        }
+        private readonly IDoctorService _doctorService = doctorService;
 
         [HttpGet("AllDoctors")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor, User")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetAll()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var doctorList = await _doctorService.GetAllAsync();
@@ -32,6 +35,8 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetById(int id)
         {
             try
@@ -50,7 +55,23 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
+        [HttpGet("department/{departmentId}")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
+        public async Task<IActionResult> GetDoctorsByDepartment(int departmentId)
+        {
+            try
+            {
+                var doctors = await _doctorService.GetDoctorsByDepartmentIdAsync(departmentId);
+                return Ok(doctors);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
         [HttpPost("AddDoctor")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<IActionResult> Add([FromForm] CreateDoctorDto createDoctorDto)
         {
             try
@@ -70,6 +91,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<IActionResult> Update(int id, [FromForm] UpdateDoctorDto updateDoctorDto)
         {
             try
@@ -89,8 +111,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Delete(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _doctorService.DeleteAsync(id);
@@ -103,8 +131,15 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("GetDoctorsBySpecialty/{specialty}")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetDoctorsBySpecialty(string specialty)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var doctors = await _doctorService.GetDoctorsBySpecialty(specialty);
@@ -117,30 +152,39 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("GetAvailableDoctorsToday")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor, User")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetAvailableDoctors()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var doctors = await _doctorService.GetAvailableDoctorsToDay();
                 return Ok(doctors);
             }
-            catch (KeyNotFoundException ex)
+            catch (Exception ex)
             {
-                return NotFound(new { message = ex.Message });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500, "An error occurred while retrieving available doctors.");
+                return BadRequest(ex.Message);
             }
         }
 
         [HttpPut("{doctorId}/update-working-hours")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
         public async Task<IActionResult> UpdateDoctorWorkingHours(int doctorId, [FromBody] string newWorkingHours)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _doctorService.UpdateDoctorWorkingHoursAsync(doctorId, newWorkingHours);
-                return NoContent();
+                return NoContent(); // 204 No Content
             }
             catch (Exception ex)
             {
@@ -149,12 +193,40 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("{doctorId}/assign-department/{departmentId}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<IActionResult> AssignDoctorToDepartment(int doctorId, int departmentId)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _doctorService.AssignDoctorToDepartmentAsync(doctorId, departmentId);
-                return NoContent();
+                return NoContent(); // 204 No Content
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("Filtering")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
+        public async Task<IActionResult> GetFilteredDoctors([FromQuery] DoctorFilterDto filterDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var doctors = await _doctorService.GetFilteredDoctorsAsync(filterDto);
+
+                return Ok(doctors);
             }
             catch (Exception ex)
             {

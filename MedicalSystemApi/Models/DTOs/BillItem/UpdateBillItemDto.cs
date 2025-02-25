@@ -25,3 +25,4 @@ namespace MedicalSystemApi.Models.DTOs.BillItem
         public int BillId { get; set; }
     }
 }
+

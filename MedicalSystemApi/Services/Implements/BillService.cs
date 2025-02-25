@@ -6,18 +6,11 @@ using MedicalSystemApi.Services.Interfaces;
 
 namespace MedicalSystemApi.Services.Implements
 {
-    public class BillService : IBillService
+    public class BillService(IBillRepository billRepository, IPatientRepository patientRepository, IMapper mapper) : IBillService
     {
-        private readonly IBillRepository _billRepository;
-        private readonly IPatientRepository _patientRepository;
-        private readonly IMapper _mapper;
-
-        public BillService(IBillRepository billRepository, IPatientRepository patientRepository, IMapper mapper)
-        {
-            _billRepository = billRepository;
-            _patientRepository = patientRepository;
-            _mapper = mapper;
-        }
+        private readonly IBillRepository _billRepository = billRepository;
+        private readonly IPatientRepository _patientRepository = patientRepository;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<IEnumerable<BillDto>> GetAllAsync()
         {
@@ -78,16 +71,16 @@ namespace MedicalSystemApi.Services.Implements
             await _billRepository.DeleteAsync(id);
         }
 
-        public async Task<BillDto> GetBillsByPatientIdAsync(int patientId)
+        public async Task<IEnumerable<BillDto>> GetBillsByPatientIdAsync(int patientId)
         {
             if (patientId <= 0) throw new ArgumentException("Id must be greater than zero");
 
-            var patient = await _patientRepository.GetByIdAsync(patientId) ??
+            var patients = await _patientRepository.GetByIdAsync(patientId) ??
                 throw new KeyNotFoundException("Patient Not Found");
             var bill = await _billRepository.GetBillsByPatientIdAsync(patientId);
 
-            var billDto = _mapper.Map<BillDto>(bill);
-            return billDto;
+            var billsDto = _mapper.Map<IEnumerable<BillDto>>(bill);
+            return billsDto;
         }
 
         public async Task UpdateTotalAmountAsync(int billId, decimal amount)
@@ -102,6 +95,17 @@ namespace MedicalSystemApi.Services.Implements
 
             if (!updated)
                 throw new Exception("Not Updated!");
+        }
+
+        public async Task<IEnumerable<BillDto>> GetFilteredBillsAsync(BillFilterDto filterDto)
+        {
+            var bills = await _billRepository.GetFilteredBillsAsync(filterDto);
+
+            if (bills == null && !bills!.Any())
+                throw new Exception("No bills found matching the given criteria.");
+
+            var billsDto = _mapper.Map<IEnumerable<BillDto>>(bills);
+            return billsDto;
         }
     }
 }

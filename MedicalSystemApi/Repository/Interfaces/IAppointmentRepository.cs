@@ -11,10 +11,11 @@ namespace MedicalSystemApi.Repository.Interfaces
         Task<bool> DoctorExistsAsync(int? doctorId);
         Task<bool> StaffExistsAsync(int? staffId);
 
-        Task<IEnumerable<Appointment>> GetAppointmentsByPatientIdAsync(int patientId);
-        Task<IEnumerable<Appointment>> GetAppointmentsByDoctorIdAsync(int doctorId);
+        Task<IEnumerable<AppointmentDto>> GetAppointmentsByPatientIdAsync(int patientId);
+        Task<IEnumerable<AppointmentDto>> GetAppointmentsByDoctorIdAsync(int doctorId);
         Task<bool> CheckDoctorAvailabilityAsync(int doctorId, DateTime date, TimeSpan time);
         Task<bool> UpdateAppointmentStatusAsync(int appointmentId, string status);
-        Task<IEnumerable<Appointment>> GetUpcomingAppointmentsAsync();
+
+        Task<IEnumerable<AppointmentDto>> GetFilteredAppointmentsAsync(AppointmentFilterDto filterDto);
     }
 }

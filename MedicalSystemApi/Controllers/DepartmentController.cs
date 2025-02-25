@@ -1,5 +1,6 @@
 ﻿using MedicalSystemApi.Models.DTOs.Department;
 using MedicalSystemApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
@@ -8,18 +9,20 @@ namespace MedicalSystemApi.Controllers
     [ApiController]
     [ApiVersion("2.0")]
 
-    public class DepartmentController : ControllerBase
+    public class DepartmentController(IDepartmentService departmentService) : ControllerBase
     {
-        private readonly IDepartmentService _departmentService;
-
-        public DepartmentController(IDepartmentService departmentService)
-        {
-            _departmentService = departmentService;
-        }
+        private readonly IDepartmentService _departmentService = departmentService;
 
         [HttpGet("AllDepartments")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetAll()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var departmentList = await _departmentService.GetAllAsync();
@@ -32,6 +35,8 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetById(int id)
         {
             try
@@ -51,6 +56,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPost("AddDepartment")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Add(CreateDepartmentDto createDepartmentDto)
         {
             try
@@ -70,6 +76,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateDepartmentDto updateDepartmentDto)
         {
             try
@@ -89,8 +96,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Delete(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _departmentService.DeleteAsync(id);
@@ -102,27 +115,21 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
-        [HttpGet("{departmentId}/doctors")]
-        public async Task<IActionResult> GetDoctorsByDepartment(int departmentId)
+        [HttpGet("Filtering")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor, User")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
+        public async Task<IActionResult> GetFilteredDepartments([FromQuery] DepartmentFilterDto filterDto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                var doctors = await _departmentService.GetDoctorsByDepartmentIdAsync(departmentId);
-                return Ok(doctors);
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
 
-        [HttpDelete("{departmentId}/remove-doctor/{doctorId}")]
-        public async Task<IActionResult> RemoveDoctorFromDepartment(int departmentId, int doctorId)
-        {
             try
             {
-                await _departmentService.RemoveDoctorFromDepartmentAsync(departmentId, doctorId);
-                return NoContent();
+                var departments = await _departmentService.GetFilteredDepartmentsAsync(filterDto);
+
+                return Ok(departments);
             }
             catch (Exception ex)
             {

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MedicalSystemApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250212141617_Add TwoFactorAttempts And LastTwoFactorAttempt To Application User")]
-    partial class AddTwoFactorAttemptsAndLastTwoFactorAttemptToApplicationUser
+    [Migration("20250221182317_RemoveBlacklistedTokensTable")]
+    partial class RemoveBlacklistedTokensTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -48,6 +48,9 @@ namespace MedicalSystemApi.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<int>("FailedTwoFactorAttempts")
+                        .HasColumnType("int");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -59,8 +62,8 @@ namespace MedicalSystemApi.Migrations
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
+                    b.Property<DateTime?>("LockoutEnd")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("NationalId")
                         .IsRequired()
@@ -134,7 +137,7 @@ namespace MedicalSystemApi.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("DATE");
 
-                    b.Property<int?>("DoctorId")
+                    b.Property<int>("DoctorId")
                         .HasColumnType("int");
 
                     b.Property<string>("Notes")
@@ -142,10 +145,10 @@ namespace MedicalSystemApi.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("PatientId")
+                    b.Property<int>("PatientId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("StaffId")
+                    b.Property<int>("StaffId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -673,17 +676,20 @@ namespace MedicalSystemApi.Migrations
                     b.HasOne("MedicalSystemApi.Models.Entities.Doctor", "Doctor")
                         .WithMany("Appointments")
                         .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
 
                     b.HasOne("MedicalSystemApi.Models.Entities.Patient", "Patient")
                         .WithMany("Appointments")
                         .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
 
                     b.HasOne("MedicalSystemApi.Models.Entities.Staff", "Staff")
                         .WithMany("Appointments")
                         .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
 
                     b.Navigation("Doctor");
 

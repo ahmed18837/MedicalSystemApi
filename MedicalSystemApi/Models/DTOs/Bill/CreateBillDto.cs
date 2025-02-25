@@ -6,6 +6,7 @@ namespace MedicalSystemApi.Models.DTOs.Bill
     public class CreateBillDto
     {
         [Required(ErrorMessage = "Date issued is required.")]
+        [DataType(DataType.Date, ErrorMessage = "Invalid date format.")]
         [DefaultValue("2025-02-15")] // قيمة افتراضية لتاريخ اليوم
         public DateTime DateIssued { get; set; }
 

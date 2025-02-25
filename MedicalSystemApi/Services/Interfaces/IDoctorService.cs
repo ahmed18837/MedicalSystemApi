@@ -6,6 +6,8 @@ namespace MedicalSystemApi.Services.Interfaces
     {
         Task<IEnumerable<DoctorDto>> GetAllAsync();
         Task<DoctorDto> GetByIdAsync(int id);
+
+        Task<IEnumerable<DoctorDto>> GetDoctorsByDepartmentIdAsync(int departmentId);
         Task AddAsync(CreateDoctorDto createDoctorDto);
         Task UpdateAsync(int id, UpdateDoctorDto updateDoctorDto);
         Task DeleteAsync(int id);
@@ -15,5 +17,7 @@ namespace MedicalSystemApi.Services.Interfaces
 
         Task AssignDoctorToDepartmentAsync(int doctorId, int departmentId);
         Task UpdateDoctorWorkingHoursAsync(int doctorId, string newWorkingHours);
+
+        Task<IEnumerable<DoctorDto>> GetFilteredDoctorsAsync(DoctorFilterDto filterDto);
     }
 }

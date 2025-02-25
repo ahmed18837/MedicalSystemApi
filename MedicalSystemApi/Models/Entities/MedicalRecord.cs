@@ -10,7 +10,7 @@ namespace MedicalSystemApi.Models.Entities
 
         [Required]
         [Column(TypeName = "DATE")]
-        public DateTime CreatedAt { get; set; } // تاريخ إنشاء السجل
+        public DateTime CreatedAt { get; set; } = DateTime.Now; // تاريخ إنشاء السجل
         [MaxLength(200)]
         public string Diagnosis { get; set; } // التشخيص
         [MaxLength(100)]

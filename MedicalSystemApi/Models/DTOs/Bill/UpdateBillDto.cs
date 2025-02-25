@@ -14,4 +14,5 @@ namespace MedicalSystemApi.Models.DTOs.Bill
         [DefaultValue(1111)] // قيمة افتراضية
         public int PatientId { get; set; }
     }
+
 }

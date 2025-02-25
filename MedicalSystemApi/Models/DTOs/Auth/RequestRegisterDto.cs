@@ -7,7 +7,7 @@ namespace MedicalSystemApi.Models.DTOs.Auth
     {
         [Required(ErrorMessage = "Full Name is required.")]
         [MaxLength(50, ErrorMessage = "Full Name cannot exceed 50 characters.")]
-        [DefaultValue("John Doe")]
+        [DefaultValue("FullName")]
         public string FullName { get; set; }
 
         [Required(ErrorMessage = "National ID is required.")]
@@ -31,14 +31,15 @@ namespace MedicalSystemApi.Models.DTOs.Auth
         [DataType(DataType.Password)]
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
         [MaxLength(64, ErrorMessage = "Password cannot exceed 64 characters.")]
-        [DefaultValue("SecurePass123!")]
+        [DefaultValue("SecurePass123")]
         public string Password { get; set; }
 
         [Required(ErrorMessage = "Confirm Password is required.")]
         [DataType(DataType.Password)]
-        [MaxLength(64)]
+        [MaxLength(64, ErrorMessage = "Password cannot exceed 64 characters.")]
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
-        [DefaultValue("SecurePass123!")]
+        [DefaultValue("SecurePass123")]
         public string ConfirmPassword { get; set; }
     }
 }

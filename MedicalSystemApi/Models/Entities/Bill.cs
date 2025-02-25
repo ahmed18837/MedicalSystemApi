@@ -21,11 +21,6 @@ namespace MedicalSystemApi.Models.Entities
         [ForeignKey("PatientId")]
         public Patient Patient { get; set; }
 
-        //// Relationship: Many Bills can be processed by one Staff (Optional)
-        //public int? StaffId { get; set; }
-        //[ForeignKey("StaffId")]
-        //public Staff Staff { get; set; }
-
         // Relationship: One Bill has many BillItems (Required)
         public ICollection<BillItem> BillItems { get; set; }
 

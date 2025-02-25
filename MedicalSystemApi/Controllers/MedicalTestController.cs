@@ -1,5 +1,6 @@
 ﻿using MedicalSystemApi.Models.DTOs.MedicalTest;
 using MedicalSystemApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
@@ -8,18 +9,20 @@ namespace MedicalSystemApi.Controllers
     [ApiController]
     [ApiVersion("3.0")]
 
-    public class MedicalTestController : ControllerBase
+    public class MedicalTestController(IMedicalTestService medicalTestService) : ControllerBase
     {
-        private readonly IMedicalTestService _medicalTestService;
-
-        public MedicalTestController(IMedicalTestService medicalTestService)
-        {
-            _medicalTestService = medicalTestService;
-        }
+        private readonly IMedicalTestService _medicalTestService = medicalTestService;
 
         [HttpGet("AllMedicalTests")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetAll()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var medicationTestList = await _medicalTestService.GetAllAsync();
@@ -32,8 +35,15 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetById(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 if (!ModelState.IsValid)
@@ -51,6 +61,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPost("AddMedicationTest")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<IActionResult> Add(CreateMedicalTestDto createMedicalTestDto)
         {
             try
@@ -70,6 +81,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateMedicalTestDto updateMedicalTestDto)
         {
             try
@@ -89,8 +101,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Delete(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _medicalTestService.DeleteAsync(id);
@@ -103,8 +121,15 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("GetExpensiveTests")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor, User")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetExpensiveTests(decimal minCost)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var tests = await _medicalTestService.GetExpensiveTests(minCost);
@@ -117,8 +142,15 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("Search")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor, User")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> SearchMedicalTests(string searchTerm)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var results = await _medicalTestService.SearchMedicalTests(searchTerm);
@@ -131,8 +163,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPost("AssignTestToBill")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
         public async Task<IActionResult> AssignTestToBill(int testId, int billId)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _medicalTestService.AssignMedicalTestToBill(testId, billId);
@@ -149,8 +187,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("UpdateCost")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<IActionResult> UpdateCost(int testId, decimal newCost)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _medicalTestService.UpdateMedicalTestCost(testId, newCost);
@@ -166,5 +210,25 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
+        [HttpGet("Filtering")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
+        public async Task<IActionResult> GetFilteredMedicalTests([FromQuery] MedicalTestFilterDto filterDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var medicalTests = await _medicalTestService.GetFilteredMedicalTestsAsync(filterDto);
+                return Ok(medicalTests);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

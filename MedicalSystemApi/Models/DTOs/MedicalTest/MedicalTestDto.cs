@@ -2,9 +2,10 @@
 {
     public class MedicalTestDto
     {
-        public int Id { get; set; }
+        //public int Id { get; set; }
         public string TestName { get; set; }
         public decimal Cost { get; set; }
         public string Description { get; set; }
     }
 }
+

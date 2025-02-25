@@ -12,5 +12,7 @@ namespace MedicalSystemApi.Services.Interfaces
 
         Task UpdateDiagnosisAndPrescriptions(int recordId, string diagnosis, string prescriptions);
         Task<IEnumerable<MedicalRecordDto>> GetMedicalHistoryByPatientIdAndDoctorId(int patientId, int doctorId);
+
+        Task<IEnumerable<MedicalRecordDto>> GetFilteredMedicalRecordsAsync(MedicalRecordFilterDto filterDto);
     }
 }

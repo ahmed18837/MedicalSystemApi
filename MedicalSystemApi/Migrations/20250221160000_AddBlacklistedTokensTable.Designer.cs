@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MedicalSystemApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250211090542_SeedRoles")]
-    partial class SeedRoles
+    [Migration("20250221160000_AddBlacklistedTokensTable")]
+    partial class AddBlacklistedTokensTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -48,16 +48,22 @@ namespace MedicalSystemApi.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<int>("FailedTwoFactorAttempts")
+                        .HasColumnType("int");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<DateTime?>("LastTwoFactorAttempt")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
+                    b.Property<DateTime?>("LockoutEnd")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("NationalId")
                         .IsRequired()
@@ -81,11 +87,28 @@ namespace MedicalSystemApi.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("ResetCode")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("TwoFactorAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TwoFactorCode")
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<DateTime?>("TwoFactorCodeExpiration")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime?>("TwoFactorSentAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
@@ -114,7 +137,7 @@ namespace MedicalSystemApi.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("DATE");
 
-                    b.Property<int?>("DoctorId")
+                    b.Property<int>("DoctorId")
                         .HasColumnType("int");
 
                     b.Property<string>("Notes")
@@ -122,10 +145,10 @@ namespace MedicalSystemApi.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<int?>("PatientId")
+                    b.Property<int>("PatientId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("StaffId")
+                    b.Property<int>("StaffId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -221,6 +244,31 @@ namespace MedicalSystemApi.Migrations
                     b.HasIndex("MedicalTestId");
 
                     b.ToTable("BillMedicalTests");
+                });
+
+            modelBuilder.Entity("MedicalSystemApi.Models.Entities.BlacklistedToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserEmail")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BlacklistedTokens");
                 });
 
             modelBuilder.Entity("MedicalSystemApi.Models.Entities.Department", b =>
@@ -653,17 +701,20 @@ namespace MedicalSystemApi.Migrations
                     b.HasOne("MedicalSystemApi.Models.Entities.Doctor", "Doctor")
                         .WithMany("Appointments")
                         .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
 
                     b.HasOne("MedicalSystemApi.Models.Entities.Patient", "Patient")
                         .WithMany("Appointments")
                         .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
 
                     b.HasOne("MedicalSystemApi.Models.Entities.Staff", "Staff")
                         .WithMany("Appointments")
                         .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .IsRequired();
 
                     b.Navigation("Doctor");
 

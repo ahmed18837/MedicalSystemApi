@@ -6,16 +6,10 @@ using MedicalSystemApi.Services.Interfaces;
 
 namespace MedicalSystemApi.Services.Implements
 {
-    public class PatientService : IPatientService
+    public class PatientService(IPatientRepository patientRepository, IMapper mapper) : IPatientService
     {
-        private readonly IPatientRepository _patientRepository;
-        private readonly IMapper _mapper;
-
-        public PatientService(IPatientRepository patientRepository, IMapper mapper)
-        {
-            _patientRepository = patientRepository ?? throw new ArgumentNullException(nameof(patientRepository));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-        }
+        private readonly IPatientRepository _patientRepository = patientRepository ?? throw new ArgumentNullException(nameof(patientRepository));
+        private readonly IMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
 
         public async Task<IEnumerable<PatientDto>> GetAllAsync()
         {
@@ -171,7 +165,35 @@ namespace MedicalSystemApi.Services.Implements
             if (string.IsNullOrWhiteSpace(newPhone))
                 throw new ArgumentException("Phone number is required.");
 
+            var patient = await _patientRepository.GetByIdAsync(patientId) ??
+               throw new InvalidOperationException("Patient not fount");
+
+
+            if (!await _patientRepository.IsPhoneNumberValid(newPhone))
+            {
+                throw new InvalidOperationException("Invalid Phone Number!");
+            }
+
             await _patientRepository.UpdatePatientPhoneAsync(patientId, newPhone);
+        }
+
+        public async Task<IEnumerable<PatientDto>> GetFilteredPatientsAsync(PatientFilterDto filterDto)
+        {
+            var patients = await _patientRepository.GetFilteredPatientsAsync(filterDto);
+
+            if (patients == null && !patients.Any())
+                throw new Exception("No patients found matching the given criteria.");
+
+            return patients.Select(p => new PatientDto
+            {
+                //Id = p.Id,
+                FullName = p.FullName,
+                DateOfBirth = p.DateOfBirth,
+                Gender = p.Gender,
+                Address = p.Address,
+                Phone = p.Phone,
+                MedicalHistoryDate = p.MedicalHistoryDate
+            }).ToList();
         }
     }
 }

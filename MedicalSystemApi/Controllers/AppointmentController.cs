@@ -8,20 +8,20 @@ namespace MedicalSystemApi.Controllers
     [ApiVersion("2.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-    public class AppointmentController : ControllerBase
+    public class AppointmentController(IAppointmentService appointmentService) : ControllerBase
     {
-        private readonly IAppointmentService _appointmentService;
-
-        public AppointmentController(IAppointmentService appointmentService)
-        {
-            _appointmentService = appointmentService;
-        }
-
+        private readonly IAppointmentService _appointmentService = appointmentService;
 
         [HttpGet("AllAppointments")]
-        [Authorize]
+        [Authorize(Roles = "SuperAdmin, Admin, User")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetAll()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var appointmentList = await _appointmentService.GetAllAsync();
@@ -34,6 +34,8 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize(Roles = "SuperAdmin, Admin, User")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetById(int id)
         {
             try
@@ -53,6 +55,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPost("Create")]
+        [Authorize(Roles = "SuperAdmin, Admin, User")]
         public async Task<IActionResult> CreateAppointment([FromBody] CreateAppointmentDto appointmentDto)
         {
             try
@@ -71,6 +74,7 @@ namespace MedicalSystemApi.Controllers
 
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "SuperAdmin, Admin, User")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateAppointmentDto updateAppointmentDto)
         {
             try
@@ -90,8 +94,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "SuperAdmin, Admin, User, Doctor")]
         public async Task<IActionResult> Delete(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _appointmentService.DeleteAsync(id);
@@ -105,8 +115,15 @@ namespace MedicalSystemApi.Controllers
 
 
         [HttpGet("GetAppointmentsByPatient/{patientId}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetAppointmentsByPatientId(int patientId)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var appointments = await _appointmentService.GetAppointmentsByPatientIdAsync(patientId);
@@ -119,8 +136,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("UpdateStatus/{appointmentId}")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
         public async Task<IActionResult> UpdateAppointmentStatus(int appointmentId, [FromBody] string newStatus)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _appointmentService.UpdateAppointmentStatusAsync(appointmentId, newStatus);
@@ -133,8 +156,16 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("GetAppointmentsByDoctor/{doctorId}")]
+
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetAppointmentsByDoctorId(int doctorId)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var appointments = await _appointmentService.GetAppointmentsByDoctorIdAsync(doctorId);
@@ -146,23 +177,16 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
-        [HttpGet("GetUpcomingAppointments")]
-        public async Task<IActionResult> GetUpcomingAppointments()
-        {
-            try
-            {
-                var appointments = await _appointmentService.GetUpcomingAppointmentsAsync();
-                return Ok(appointments);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
         [HttpGet("CheckDoctorAvailability")]
+
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
         public async Task<IActionResult> CheckDoctorAvailability(int doctorId, DateTime date, TimeSpan time)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var availabilityMessage = await _appointmentService.CheckDoctorAvailabilityAsync(doctorId, date, time);
@@ -174,6 +198,26 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
+        [HttpGet("Filtering")]
 
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
+        public async Task<IActionResult> GetFilteredAppointments([FromQuery] AppointmentFilterDto filterDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var appointments = await _appointmentService.GetFilteredAppointmentsAsync(filterDto);
+                return Ok(appointments);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

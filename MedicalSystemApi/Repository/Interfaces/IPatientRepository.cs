@@ -1,4 +1,5 @@
-﻿using MedicalSystemApi.Models.Entities;
+﻿using MedicalSystemApi.Models.DTOs.Patient;
+using MedicalSystemApi.Models.Entities;
 
 namespace MedicalSystemApi.Repository.Interfaces
 {
@@ -12,5 +13,7 @@ namespace MedicalSystemApi.Repository.Interfaces
         Task<IEnumerable<Patient>> GetPatientsAdmittedInLastYearAsync(int year);
         Task<IEnumerable<Patient>> SearchPatientsByNameAsync(string name);
         Task<bool> UpdatePatientPhoneAsync(int patientId, string newPhone);
+        // Filtering
+        Task<IEnumerable<Patient>> GetFilteredPatientsAsync(PatientFilterDto filterDto);
     }
 }

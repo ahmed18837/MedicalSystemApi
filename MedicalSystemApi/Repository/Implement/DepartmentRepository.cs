@@ -5,31 +5,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MedicalSystemApi.Repository.Implement
 {
-    public class DepartmentRepository : GenericRepository<Department>, IDepartmentRepository
+    public class DepartmentRepository(AppDbContext dbContext) : GenericRepository<Department>(dbContext), IDepartmentRepository
     {
-        private readonly AppDbContext _dbContext;
-        public DepartmentRepository(AppDbContext dbContext) : base(dbContext)
-        {
-            _dbContext = dbContext;
-        }
+        private readonly AppDbContext _dbContext = dbContext;
 
-        public async Task<IEnumerable<Doctor>> GetDoctorsByDepartmentIdAsync(int departmentId)
+        public async Task<IEnumerable<Department>> GetFilteredDepartmentsAsync(DepartmentFilterDto filterDto)
         {
-            return await _dbContext.Doctors
-                .AsNoTracking()
-                .Include(d => d.Department)
-                .Where(d => d.DepartmentId == departmentId)
-                .ToListAsync();
-        }
+            var query = _dbContext.Departments.AsQueryable();
 
-        public async Task<bool> RemoveDoctorFromDepartmentAsync(int departmentId, int doctorId)
-        {
-            var doctor = await _dbContext.Doctors.FirstOrDefaultAsync(d => d.Id == doctorId && d.DepartmentId == departmentId);
-            if (doctor == null) return false;
+            if (!string.IsNullOrEmpty(filterDto.Name))
+                query = query.Where(d => EF.Functions.Like(d.Name, $"%{filterDto.Name}%"));
 
-            doctor.DepartmentId = null;
-            _dbContext.Doctors.Update(doctor);
-            return await _dbContext.SaveChangesAsync() > 0;
+            if (!string.IsNullOrEmpty(filterDto.Location))
+                query = query.Where(d => EF.Functions.Like(d.Location, $"%{filterDto.Location}%"));
+
+            return await query.ToListAsync();
         }
     }
 }

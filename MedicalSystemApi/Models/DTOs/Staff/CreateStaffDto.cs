@@ -7,7 +7,7 @@ namespace MedicalSystemApi.Models.DTOs.Staff
     {
         [Required(ErrorMessage = "Full Name is required.")]
         [MaxLength(100, ErrorMessage = "Full Name cannot exceed 100 characters.")]
-        [DefaultValue("Ahmed Ahmed")]
+        [DefaultValue("Full Name")]
         public string FullName { get; set; }
 
         [Required(ErrorMessage = "Role is required.")]
@@ -22,8 +22,8 @@ namespace MedicalSystemApi.Models.DTOs.Staff
         public string Phone { get; set; } = "+201234567891";
 
         [Required(ErrorMessage = "Email is required.")]
-        [MaxLength(50, ErrorMessage = "Email cannot exceed 50 characters.")]
         [EmailAddress(ErrorMessage = "Invalid email format.")]
+        [DefaultValue("user@example.com")]
         public string Email { get; set; }
 
         [Required(ErrorMessage = "Department is required.")]

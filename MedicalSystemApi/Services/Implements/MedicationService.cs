@@ -6,16 +6,10 @@ using MedicalSystemApi.Services.Interfaces;
 
 namespace MedicalSystemApi.Services.Implements
 {
-    public class MedicationService : IMedicationService
+    public class MedicationService(IMedicationRepository medicationRepository, IMapper mapper) : IMedicationService
     {
-        private readonly IMedicationRepository _medicationRepository;
-        private readonly IMapper _mapper;
-
-        public MedicationService(IMedicationRepository medicationRepository, IMapper mapper)
-        {
-            _medicationRepository = medicationRepository;
-            _mapper = mapper;
-        }
+        private readonly IMedicationRepository _medicationRepository = medicationRepository;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<IEnumerable<MedicationDto>> GetAllAsync()
         {
@@ -105,6 +99,18 @@ namespace MedicalSystemApi.Services.Implements
             var statistics = await _medicationRepository.GetMedicationStatisticsAsync();
             if (statistics == null) throw new Exception("Not Found!");
             return statistics;
+        }
+
+        public async Task<IEnumerable<MedicationDto>> GetFilteredMedicationsAsync(MedicationFilterDto filterDto)
+        {
+            var medications = await _medicationRepository.GetFilteredMedicationsAsync(filterDto);
+
+            if (medications == null && !medications.Any())
+                throw new Exception("No Medications found matching the given criteria.");
+
+            var medicationsDto = _mapper.Map<IEnumerable<MedicationDto>>(medications);
+
+            return medicationsDto;
         }
     }
 }

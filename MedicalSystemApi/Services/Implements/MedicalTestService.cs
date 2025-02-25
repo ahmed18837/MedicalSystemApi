@@ -6,16 +6,10 @@ using MedicalSystemApi.Services.Interfaces;
 
 namespace MedicalSystemApi.Services.Implements
 {
-    public class MedicalTestService : IMedicalTestService
+    public class MedicalTestService(IMedicalTestRepository medicalTestRepository, IMapper mapper) : IMedicalTestService
     {
-        private readonly IMedicalTestRepository _medicalTestRepository;
-        private readonly IMapper _mapper;
-
-        public MedicalTestService(IMedicalTestRepository medicalTestRepository, IMapper mapper)
-        {
-            _medicalTestRepository = medicalTestRepository;
-            _mapper = mapper;
-        }
+        private readonly IMedicalTestRepository _medicalTestRepository = medicalTestRepository;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<IEnumerable<MedicalTestDto>> GetAllAsync()
         {
@@ -40,6 +34,7 @@ namespace MedicalSystemApi.Services.Implements
         public async Task AddAsync(CreateMedicalTestDto createMedicalTestDto)
         {
             if (createMedicalTestDto == null) throw new ArgumentNullException("Input data cannot be null");
+
             if (string.IsNullOrWhiteSpace(createMedicalTestDto.TestName))
             {
                 throw new ArgumentException("Test Name cannot be null or empty.");
@@ -104,6 +99,17 @@ namespace MedicalSystemApi.Services.Implements
                 throw new ArgumentException("ID not be valid");
 
             await _medicalTestRepository.UpdateMedicalTestCost(testId, newCost);
+        }
+
+        public async Task<IEnumerable<MedicalTestDto>> GetFilteredMedicalTestsAsync(MedicalTestFilterDto filterDto)
+        {
+            var medicalTests = await _medicalTestRepository.GetFilteredMedicalTestsAsync(filterDto);
+
+            if (medicalTests == null && !medicalTests.Any())
+                throw new Exception("No medicalTests found matching the given criteria.");
+            var medicalTestsDto = _mapper.Map<IEnumerable<MedicalTestDto>>(medicalTests);
+
+            return medicalTestsDto;
         }
     }
 }

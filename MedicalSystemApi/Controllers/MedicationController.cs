@@ -1,5 +1,6 @@
 ﻿using MedicalSystemApi.Models.DTOs.Medication;
 using MedicalSystemApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
@@ -8,18 +9,20 @@ namespace MedicalSystemApi.Controllers
     [ApiController]
     [ApiVersion("3.0")]
 
-    public class MedicationController : ControllerBase
+    public class MedicationController(IMedicationService medicationService) : ControllerBase
     {
-        private readonly IMedicationService _medicationService;
-
-        public MedicationController(IMedicationService medicationService)
-        {
-            _medicationService = medicationService;
-        }
+        private readonly IMedicationService _medicationService = medicationService;
 
         [HttpGet("AllMedications")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> AllStaff()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var medicationList = await _medicationService.GetAllAsync();
@@ -32,6 +35,8 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetById(int id)
         {
             try
@@ -51,6 +56,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPost("AddMedication")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<IActionResult> Add(CreateMedicationDto createMedicationDto)
         {
             try
@@ -70,6 +76,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateMedicationDto updateMedicationDto)
         {
             try
@@ -89,8 +96,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Delete(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _medicationService.DeleteAsync(id);
@@ -103,8 +116,15 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("dosage-range")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetMedicationsByDosageRange([FromQuery] string minDosage, [FromQuery] string maxDosage)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var medications = await _medicationService.GetMedicationsByDosageRangeAsync(minDosage, maxDosage);
@@ -117,8 +137,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("statistics")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
         public async Task<IActionResult> GetMedicationStatistics()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var statistics = await _medicationService.GetMedicationStatisticsAsync();
@@ -131,8 +157,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("update-instructions/{medicationId}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<IActionResult> UpdateMedicationInstructions(int medicationId, [FromBody] string newInstructions)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _medicationService.UpdateMedicationInstructionsAsync(medicationId, newInstructions);
@@ -144,5 +176,26 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
+        [HttpGet("Filtering")]
+        [Authorize(Roles = "SuperAdmin, Admin, Doctor")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
+        public async Task<IActionResult> GetFilteredMedications([FromQuery] MedicationFilterDto filterDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var medications = await _medicationService.GetFilteredMedicationsAsync(filterDto);
+
+                return Ok(medications);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

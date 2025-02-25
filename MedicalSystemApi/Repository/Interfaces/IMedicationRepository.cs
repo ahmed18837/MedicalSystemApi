@@ -1,4 +1,5 @@
-﻿using MedicalSystemApi.Models.Entities;
+﻿using MedicalSystemApi.Models.DTOs.Medication;
+using MedicalSystemApi.Models.Entities;
 
 namespace MedicalSystemApi.Repository.Interfaces
 {
@@ -8,5 +9,7 @@ namespace MedicalSystemApi.Repository.Interfaces
         Task<IEnumerable<Medication>> GetMedicationsByDosageRangeAsync(string minDosage, string maxDosage);
         Task<bool> UpdateMedicationInstructionsAsync(int id, string instructions);
         Task<Dictionary<string, int>> GetMedicationStatisticsAsync();
+        // Filtering
+        Task<IEnumerable<Medication>> GetFilteredMedicationsAsync(MedicationFilterDto filterDto);
     }
 }

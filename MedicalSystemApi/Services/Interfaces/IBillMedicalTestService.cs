@@ -14,5 +14,7 @@ namespace MedicalSystemApi.Services.Interfaces
         Task<IEnumerable<BillMedicalTestDto>> GetTestsByBillIdAsync(int billId);
         Task<IEnumerable<BillDto>> GetBillsForMedicalTestAsync(int testId);
         Task UpdateTestCostAsync(int id, decimal newCost);
+
+        Task<IEnumerable<BillMedicalTestDto>> GetFilteredBillMedicalTestsAsync(BillMedicalTestFilterDto filterDto);
     }
 }

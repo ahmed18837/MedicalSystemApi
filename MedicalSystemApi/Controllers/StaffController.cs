@@ -9,22 +9,23 @@ namespace MedicalSystemApi.Controllers
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
 
-    public class StaffController : ControllerBase
+    public class StaffController(IStaffService staffService) : ControllerBase
     {
-        private readonly IStaffService _staffService;
+        private readonly IStaffService _staffService = staffService;
 
-        public StaffController(IStaffService staffService)
-        {
-            _staffService = staffService;
-        }
-
-        [HttpGet]
-        [Authorize]
+        [HttpGet("AllStaffWithDepartmentName")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> AllStaff()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
-                var staff = await _staffService.GetAllAsync();
+                var staff = await _staffService.GetAllWithDepartmentNameAsync();
                 return Ok(staff);
             }
             catch (Exception ex)
@@ -34,6 +35,8 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetById(int id)
         {
             try
@@ -53,6 +56,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPost("AddStaff")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Add([FromForm] CreateStaffDto createStaffDto)
         {
             try
@@ -72,6 +76,7 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Update(int id, [FromForm] UpdateStaffDto updateStaffDto)
         {
             try
@@ -91,8 +96,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> Delete(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _staffService.DeleteAsync(id);
@@ -105,8 +116,15 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("GetByDepartment/{departmentId}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetStaffByDepartment(int departmentId)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var staffListDto = await _staffService.GetStaffByDepartmentAsync(departmentId);
@@ -119,8 +137,15 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("SearchWithPhone")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> SearchWithPhoneStaff([FromQuery] string phone)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var staff = await _staffService.SearchWithPhoneStaffAsync(phone);
@@ -133,8 +158,15 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("SearchWithEmail")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> SearchWithEmailStaff([FromQuery] string email)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var staff = await _staffService.SearchWithEmailStaffAsync(email);
@@ -147,8 +179,15 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("GetYearsOfService/{id}")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetYearsOfService(int id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var years = await _staffService.GetYearsOfServiceAsync(id);
@@ -161,8 +200,15 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("countByRole")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<ActionResult<Dictionary<string, int>>> GetStaffCountByRole()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var staffCountByRole = await _staffService.GetStaffCountByRoleAsync();
@@ -175,8 +221,15 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("countByDepartment")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<ActionResult<Dictionary<string, int>>> GetStaffCountByDepartment()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var staffCountByDepartment = await _staffService.GetStaffCountByDepartmentAsync();
@@ -189,8 +242,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpPut("updateRoleOrDepartment")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
         public async Task<IActionResult> UpdateStaffRoleOrDepartment([FromBody] UpdateStaffRoleOrDepartmentDto updateDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _staffService.UpdateStaffRoleOrDepartmentAsync(updateDto);
@@ -202,5 +261,31 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
+        [HttpGet("Filtering")]
+        [Authorize(Roles = "SuperAdmin, Admin")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
+        public async Task<IActionResult> GetFilteredStaff([FromQuery] StaffFilterDto filterDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var staffList = await _staffService.GetFilteredStaffAsync(filterDto);
+
+                if (!staffList.Any())
+                {
+                    return NotFound("No staff members found matching the given criteria.");
+                }
+
+                return Ok(staffList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

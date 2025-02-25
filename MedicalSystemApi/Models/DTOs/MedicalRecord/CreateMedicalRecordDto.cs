@@ -11,7 +11,7 @@ namespace MedicalSystemApi.Models.DTOs.MedicalRecord
         public string Diagnosis { get; set; }
 
         [Required(ErrorMessage = "Prescriptions are required.")]
-        [MaxLength(100, ErrorMessage = "Prescriptions cannot exceed 100 characters.")]
+        [MaxLength(255, ErrorMessage = "Prescriptions cannot exceed 100 characters.")]
         [DefaultValue("Paracetamol 500mg - Twice a day")] // قيمة افتراضية
         public string Prescriptions { get; set; }
 

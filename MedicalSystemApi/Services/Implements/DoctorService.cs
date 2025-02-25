@@ -6,52 +6,47 @@ using MedicalSystemApi.Services.Interfaces;
 
 namespace MedicalSystemApi.Services.Implements
 {
-    public class DoctorService : IDoctorService
+    public class DoctorService(IDoctorRepository doctorRepository, IFileService fileService, IMapper mapper) : IDoctorService
     {
-        private readonly IDoctorRepository _doctorRepository;
-        private readonly IFileService _fileService;
-        private readonly IMapper _mapper;
-
-        public DoctorService(IDoctorRepository doctorRepository, IFileService fileService, IMapper mapper)
-        {
-            _doctorRepository = doctorRepository;
-            _fileService = fileService;
-            _mapper = mapper;
-        }
+        private readonly IDoctorRepository _doctorRepository = doctorRepository;
+        private readonly IFileService _fileService = fileService;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<IEnumerable<DoctorDto>> GetAllAsync()
         {
-            var doctorList = await _doctorRepository.GetAllWithDepartmentName() ??
+            var doctorListDto = await _doctorRepository.GetAllWithDepartmentName();
+
+            if (doctorListDto == null || !doctorListDto.Any())
                 throw new Exception("There are not Doctors!");
-
-            return doctorList.Select(d => new DoctorDto
-            {
-                Id = d.Id,
-                FullName = d.FullName,
-                Age = d.Age,
-                Gender = d.Gender,
-                Phone = d.Phone,
-                Email = d.Email,
-                Specialty = d.Specialty,
-                WorkingHours = d.WorkingHours,
-                DepartmentName = d.Department.Name
-            }); // اسرع
-
-            //var doctorListDto = _mapper.Map<IEnumerable<DoctorDto>>(doctorList);
-            //return doctorListDto;
+            return doctorListDto;
         }
 
         public async Task<DoctorDto> GetByIdAsync(int id)
         {
             if (id <= 0) throw new ArgumentException("Id must be greater than zero");
 
-            var doctor = await _doctorRepository.GetDoctorWithDepartmentName(id) ??
+            var doctorDto = await _doctorRepository.GetDoctorWithDepartmentName(id) ??
                 throw new InvalidOperationException("Doctor not fount");
 
-            var doctorDto = _mapper.Map<DoctorDto>(doctor);
             return doctorDto;
         }
 
+        public async Task<IEnumerable<DoctorDto>> GetDoctorsByDepartmentIdAsync(int departmentId)
+        {
+            if (departmentId <= 0)
+                throw new ArgumentException("Invalid department ID.");
+
+            if (!await _doctorRepository.DepartmentExistsAsync(departmentId))
+            {
+                throw new KeyNotFoundException("Department not found!");
+            }
+
+            var doctors = await _doctorRepository.GetDoctorsByDepartmentIdAsync(departmentId);
+            if (!doctors.Any() || doctors == null)
+                throw new KeyNotFoundException("No doctors found in this department.");
+
+            return doctors;
+        }
 
         public async Task AddAsync(CreateDoctorDto createDoctorDto)
         {
@@ -109,8 +104,9 @@ namespace MedicalSystemApi.Services.Implements
 
             if (!string.IsNullOrEmpty(doctor.ImagePath))
             {
-                await _fileService.DeleteFileAsync(doctor.ImagePath);
+                await _fileService.DeleteFileAsync(doctor.ImagePath!);
             }
+
             await _doctorRepository.DeleteAsync(id);
         }
 
@@ -119,12 +115,11 @@ namespace MedicalSystemApi.Services.Implements
             if (string.IsNullOrWhiteSpace(specialty))
                 throw new ArgumentException("Specialty cannot be empty.");
 
-            var doctors = await _doctorRepository.GetDoctorsBySpecialty(specialty);
+            var doctorsDto = await _doctorRepository.GetDoctorsBySpecialty(specialty);
 
-            if (!doctors.Any() || doctors == null)
+            if (!doctorsDto.Any() || doctorsDto == null)
                 throw new KeyNotFoundException($"No doctors found for specialty '{specialty}'.");
 
-            var doctorsDto = _mapper.Map<IEnumerable<DoctorDto>>(doctors);
             return doctorsDto;
         }
 
@@ -166,6 +161,16 @@ namespace MedicalSystemApi.Services.Implements
             }
         }
 
+        public async Task<IEnumerable<DoctorDto>> GetFilteredDoctorsAsync(DoctorFilterDto filterDto)
+        {
+            var doctorsDto = await _doctorRepository.GetFilteredDoctorsAsync(filterDto);
+
+            if (doctorsDto == null && !doctorsDto!.Any())
+                throw new Exception("No doctors found matching the given criteria.");
+
+            return doctorsDto;
+        }
+
         private async Task ValidateDoctorData(CreateDoctorDto doctorDto)
         {
             if (string.IsNullOrEmpty(doctorDto.FullName))
@@ -188,5 +193,6 @@ namespace MedicalSystemApi.Services.Implements
                 throw new InvalidOperationException("Invalid Phone Number!");
             }
         }
+
     }
 }

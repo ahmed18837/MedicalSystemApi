@@ -5,13 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MedicalSystemApi.Repository.Implement
 {
-    public class MedicalTestRepository : GenericRepository<MedicalTest>, IMedicalTestRepository
+    public class MedicalTestRepository(AppDbContext dbContext) : GenericRepository<MedicalTest>(dbContext), IMedicalTestRepository
     {
-        private readonly AppDbContext _dbContext;
-        public MedicalTestRepository(AppDbContext dbContext) : base(dbContext)
-        {
-            _dbContext = dbContext;
-        }
+        private readonly AppDbContext _dbContext = dbContext;
 
         public async Task AssignMedicalTestToBill(int testId, int billId)
         {
@@ -54,6 +50,22 @@ namespace MedicalSystemApi.Repository.Implement
 
             await _dbContext.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<IEnumerable<MedicalTest>> GetFilteredMedicalTestsAsync(MedicalTestFilterDto filterDto)
+        {
+            var query = _dbContext.MedicalTests.AsQueryable();
+
+            if (!string.IsNullOrEmpty(filterDto.TestName))
+                query = query.Where(m => EF.Functions.Like(m.TestName, $"%{filterDto.TestName}%"));
+
+            if (filterDto.MinCost.HasValue)
+                query = query.Where(m => m.Cost >= filterDto.MinCost.Value);
+
+            if (filterDto.MaxCost.HasValue)
+                query = query.Where(m => m.Cost <= filterDto.MaxCost.Value);
+
+            return await query.ToListAsync();
         }
     }
 }

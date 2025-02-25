@@ -6,25 +6,17 @@ using MedicalSystemApi.Services.Interfaces;
 
 namespace MedicalSystemApi.Services.Implements
 {
-    public class StaffService : IStaffService
+    public class StaffService(IStaffRepository staffRepository, IFileService fileService, IMapper mapper) : IStaffService
     {
-        private readonly IStaffRepository _staffRepository;
-        private readonly IFileService _fileService;
-        private readonly IMapper _mapper;
+        private readonly IStaffRepository _staffRepository = staffRepository;
+        private readonly IFileService _fileService = fileService;
+        private readonly IMapper _mapper = mapper;
 
-        public StaffService(IStaffRepository staffRepository, IFileService fileService, IMapper mapper)
+        public async Task<IEnumerable<StaffDto>> GetAllWithDepartmentNameAsync()
         {
-            _staffRepository = staffRepository;
-            _fileService = fileService;
-            _mapper = mapper;
-        }
-
-        public async Task<IEnumerable<StaffDto>> GetAllAsync()
-        {
-            var staffList = await _staffRepository.GetAllWithDepartmentNameAsync() ??
+            var staffListDto = await _staffRepository.GetAllWithDepartmentNameAsync() ??
                 throw new Exception("There are not Staffs!");
 
-            var staffListDto = _mapper.Map<IEnumerable<StaffDto>>(staffList); // ابطىء نسبيا ولكن سهل فى التعديل
             return staffListDto;
         }
 
@@ -32,10 +24,9 @@ namespace MedicalSystemApi.Services.Implements
         {
             if (id <= 0) throw new ArgumentException("Id must be greater than zero");
 
-            var staff = await _staffRepository.GetStaffWithDepartmentAsync(id) ??
+            var staffDto = await _staffRepository.GetStaffWithDepartmentAsync(id) ??
                 throw new InvalidOperationException("Staff not fount");
 
-            var staffDto = _mapper.Map<StaffDto>(staff);
             return staffDto;
         }
 
@@ -114,7 +105,7 @@ namespace MedicalSystemApi.Services.Implements
             {
                 throw new KeyNotFoundException("Department not found!");
             }
-            var staffList = await _staffRepository.GetStaffByDepartmentAsync(departmentId);
+            var staffList = await _staffRepository.GetStaffWithDepartmentIdAsync(departmentId);
             var staffListDto = _mapper.Map<IEnumerable<StaffDto>>(staffList);
             return staffListDto;
         }
@@ -228,17 +219,20 @@ namespace MedicalSystemApi.Services.Implements
             await _staffRepository.UpdateAsync(int.Parse(staffId), staff);
         }
 
+        public async Task<IEnumerable<StaffDto>> GetFilteredStaffAsync(StaffFilterDto filterDto)
+        {
+            var staffList = await _staffRepository.GetFilteredStaffAsync(filterDto);
+            if (staffList == null && !staffList!.Any())
+                throw new Exception("No staff members found matching the given criteria");
+
+            var staffListDto = _mapper.Map<IEnumerable<StaffDto>>(staffList);
+            return staffListDto;
+        }
+
+
+
         private async Task ValidateStaffData(UpdateStaffDto staffDto)
         {
-            if (string.IsNullOrEmpty(staffDto.FullName))
-            {
-                throw new ArgumentException("Full name is required");
-            }
-            if (string.IsNullOrEmpty(staffDto.RoleStaff))
-            {
-                throw new ArgumentException("Role name is required");
-            }
-
             if (!await _staffRepository.IsEmailValid(staffDto.Email))
             {
                 throw new InvalidOperationException("Invalid Email Address!");
@@ -268,5 +262,6 @@ namespace MedicalSystemApi.Services.Implements
     };
             return validRoles.Contains(role);
         }
+
     }
 }

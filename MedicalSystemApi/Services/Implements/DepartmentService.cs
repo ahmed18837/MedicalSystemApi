@@ -1,24 +1,16 @@
 ﻿using AutoMapper;
 using MedicalSystemApi.Models.DTOs.Department;
-using MedicalSystemApi.Models.DTOs.Doctor;
 using MedicalSystemApi.Models.Entities;
 using MedicalSystemApi.Repository.Interfaces;
 using MedicalSystemApi.Services.Interfaces;
 
 namespace MedicalSystemApi.Services.Implements
 {
-    public class DepartmentService : IDepartmentService
+    public class DepartmentService(IDepartmentRepository departmentRepository, IDoctorRepository doctorRepository, IMapper mapper) : IDepartmentService
     {
-        private readonly IDepartmentRepository _departmentRepository;
-        private readonly IDoctorRepository _doctorRepository;
-        private readonly IMapper _mapper;
-
-        public DepartmentService(IDepartmentRepository departmentRepository, IDoctorRepository doctorRepository, IMapper mapper)
-        {
-            _departmentRepository = departmentRepository;
-            _doctorRepository = doctorRepository;
-            _mapper = mapper;
-        }
+        private readonly IDepartmentRepository _departmentRepository = departmentRepository;
+        private readonly IDoctorRepository _doctorRepository = doctorRepository;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<IEnumerable<DepartmentDto>> GetAllAsync()
         {
@@ -65,40 +57,22 @@ namespace MedicalSystemApi.Services.Implements
         public async Task DeleteAsync(int id)
         {
             var department = await _departmentRepository.GetByIdAsync(id) ??
-               throw new KeyNotFoundException("Department not found");
+               throw new KeyNotFoundException("Department not found!");
             await _departmentRepository.DeleteAsync(id);
         }
 
-        public async Task<IEnumerable<DoctorDto>> GetDoctorsByDepartmentIdAsync(int departmentId)
+        public async Task<IEnumerable<DepartmentDto>> GetFilteredDepartmentsAsync(DepartmentFilterDto filterDto)
         {
-            if (departmentId <= 0)
-            {
-                throw new ArgumentException("Invalid Department ID.");
-            }
+            var departments = await _departmentRepository.GetFilteredDepartmentsAsync(filterDto);
 
-            var doctors = await _departmentRepository.GetDoctorsByDepartmentIdAsync(departmentId);
+            if (departments == null && !departments!.Any())
+                throw new Exception("No departments found matching the given criteria.");
 
-            if (!doctors.Any())
-            {
-                throw new KeyNotFoundException($"No doctors found for Department ID {departmentId}");
-            }
-
-            var doctorsDto = _mapper.Map<IEnumerable<DoctorDto>>(doctors);
-            return doctorsDto;
+            var departmentsDto = _mapper.Map<IEnumerable<DepartmentDto>>(departments);
+            return departmentsDto;
         }
 
-        public async Task RemoveDoctorFromDepartmentAsync(int departmentId, int doctorId)
-        {
-            if (departmentId <= 0 || doctorId <= 0)
-                throw new ArgumentException("Invalid Department ID or Doctor ID.");
-
-            var doctor = await _doctorRepository.GetByIdAsync(doctorId);
-            if (doctor == null || doctor.DepartmentId != departmentId)
-                throw new KeyNotFoundException($"Doctor with ID {doctorId} is not part of Department {departmentId}");
-
-            bool success = await _departmentRepository.RemoveDoctorFromDepartmentAsync(departmentId, doctorId);
-            if (!success)
-                throw new Exception("Failed to remove doctor from department");
-        }
     }
 }
+
+

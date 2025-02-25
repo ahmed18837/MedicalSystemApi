@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MedicalSystemApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250215073752_Make PatientId, DoctorId and StaffId Required In Appointment")]
-    partial class MakePatientIdDoctorIdandStaffIdRequiredInAppointment
+    [Migration("20250225065909_MakeDoctorIdNullableInAppointments")]
+    partial class MakeDoctorIdNullableInAppointments
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -278,8 +278,7 @@ namespace MedicalSystemApi.Migrations
                     b.Property<int>("Age")
                         .HasColumnType("int");
 
-                    b.Property<int?>("DepartmentId")
-                        .IsRequired()
+                    b.Property<int>("DepartmentId")
                         .HasColumnType("int");
 
                     b.Property<string>("Email")
@@ -676,7 +675,7 @@ namespace MedicalSystemApi.Migrations
                     b.HasOne("MedicalSystemApi.Models.Entities.Doctor", "Doctor")
                         .WithMany("Appointments")
                         .HasForeignKey("DoctorId")
-                        .OnDelete(DeleteBehavior.SetNull)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("MedicalSystemApi.Models.Entities.Patient", "Patient")
@@ -688,7 +687,7 @@ namespace MedicalSystemApi.Migrations
                     b.HasOne("MedicalSystemApi.Models.Entities.Staff", "Staff")
                         .WithMany("Appointments")
                         .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.SetNull)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Doctor");

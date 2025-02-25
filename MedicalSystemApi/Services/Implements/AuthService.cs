@@ -8,35 +8,25 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
 namespace MedicalSystemApi.Services.Implements
 {
-    public class AuthService : IAuthService
+    public class AuthService(IAuthRepository authRepository, UserManager<ApplicationUser> manager, SignInManager<ApplicationUser> signInManager
+            , RoleManager<IdentityRole> roleManager
+            , IMapper mapper, IOptions<JWT> jwt, IEmailService emailService) : IAuthService
     {
 
-        private readonly UserManager<ApplicationUser> _manager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly JWT _jwt;
-        private readonly IAuthRepository _authRepository;
-        private readonly IEmailService _emailService;
-        private readonly IMapper _mapper;
-
-        public AuthService(IAuthRepository authRepository, UserManager<ApplicationUser> manager, SignInManager<ApplicationUser> signInManager
-            , RoleManager<IdentityRole> roleManager
-            , IMapper mapper, IOptions<JWT> jwt, IEmailService emailService)
-        {
-            _authRepository = authRepository;
-            _manager = manager;
-            _signInManager = signInManager;
-            _roleManager = roleManager;
-            _emailService = emailService;
-            _mapper = mapper;
-            _jwt = jwt.Value;
-        }
+        private readonly UserManager<ApplicationUser> _manager = manager;
+        private readonly RoleManager<IdentityRole> _roleManager = roleManager;
+        private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
+        private readonly JWT _jwt = jwt.Value;
+        private readonly IAuthRepository _authRepository = authRepository;
+        private readonly IEmailService _emailService = emailService;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<IdentityResult> RegisterAsync(RequestRegisterDto request)
         {
@@ -93,7 +83,7 @@ namespace MedicalSystemApi.Services.Implements
             var appUser = _mapper.Map<ApplicationUser>(request);
 
             // Crate Token
-            var jwtToken = await CreateJwtToken(appUser);
+            var jwtToken = await CreateJwtToken(appUser, roles.ToArray());
 
             string subject = "Your Login Token";
             string body = $"<h2>Your JWT Token</h2><p>{jwtToken}</p><p>Use this token for authentication.</p>";
@@ -104,6 +94,7 @@ namespace MedicalSystemApi.Services.Implements
                 return "Login successful, but failed to send token via email";
 
             return "Login successful. Token sent to your email";
+
         }
 
         public async Task<string> AssignRoleAsync(string email, string roleName)
@@ -187,7 +178,7 @@ namespace MedicalSystemApi.Services.Implements
             var twoFactorCode = GenerateCode();
 
             user.TwoFactorCode = twoFactorCode;
-            user.TwoFactorCodeExpiration = DateTime.UtcNow.AddMinutes(10);
+            user.TwoFactorCodeExpiration = DateTime.UtcNow.AddMinutes(5);
 
             await _manager.UpdateAsync(user);
 
@@ -324,7 +315,10 @@ namespace MedicalSystemApi.Services.Implements
         public async Task<IEnumerable<UserDto>> GetUsersAsync()
         {
             var users = _manager.Users.ToList();
-
+            if (users == null || !users.Any())
+            {
+                throw new Exception("No Users Founded!");
+            }
             var usersDto = _mapper.Map<List<UserDto>>(users);
 
             // User لكل  Role لتحديد 
@@ -380,7 +374,8 @@ namespace MedicalSystemApi.Services.Implements
 
         public async Task<IEnumerable<string>> GetAllRolesAsync()
         {
-            var roles = await _roleManager.Roles.Select(r => r.Name).ToListAsync() ??
+            var roles = await _roleManager.Roles.Select(r => r.Name).ToListAsync();
+            if (roles == null || !roles.Any())
                 throw new Exception("No Roles Exist!");
 
             return roles;
@@ -470,35 +465,107 @@ namespace MedicalSystemApi.Services.Implements
             await _signInManager.SignOutAsync();
         }
 
-        private async Task<string> CreateJwtToken(ApplicationUser user)
+        public async Task<IEnumerable<string>> GetRolesByEmailAsync(string email)
         {
-            var userClaims = await _manager.GetClaimsAsync(user);
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                throw new Exception("Email is required");
+            }
+
+            var user = await _manager.FindByEmailAsync(email) ??
+               throw new Exception("User not found");
+
             var roles = await _manager.GetRolesAsync(user);
-            var roleClaims = new List<Claim>();
+            return roles;
+        }
+
+        public async Task<string> RemoveUserFromRoleAsync(string email, string role)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(role))
+                return "Email and role are required.";
+
+            var user = await _manager.FindByEmailAsync(email) ??
+                throw new Exception("User not found");
+
+            if (!await _manager.IsInRoleAsync(user, role))
+                return "User is not in this Role!";
+
+            var result = await _manager.RemoveFromRoleAsync(user, role);
+            if (!result.Succeeded)
+                throw new Exception("Failed to remove user from role");
+
+            return $"User {email} removed from role {role} successfully.";
+        }
+
+        public async Task<string> DeleteUserAsync(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                throw new ArgumentException("Email is required.");
+
+            var user = await _manager.FindByEmailAsync(email) ??
+                throw new KeyNotFoundException("User not found");
+
+            var result = await _manager.DeleteAsync(user);
+            if (!result.Succeeded)
+                throw new InvalidOperationException("Failed to delete user.");
+
+            return $"User {email} removed";
+        }
+
+        public async Task<string> AddUserAsync(AddUserDto userDto, string password, string role)
+        {
+
+            var user = _mapper.Map<ApplicationUser>(userDto);
+
+            // Check if user already exists
+            var existingUser = await _manager.FindByEmailAsync(user.Email);
+            if (existingUser != null)
+                throw new InvalidOperationException("User with this email already exists.");
+
+            user.UserName = user.Email;
+            // Check if role exists
+            var roleExists = await _roleManager.RoleExistsAsync(role);
+            if (!roleExists)
+                throw new InvalidOperationException("Specified role does not exist.");
+
+            // Create the user
+            var result = await _manager.CreateAsync(user, password);
+            if (!result.Succeeded)
+                throw new InvalidOperationException(string.Join("; ", result.Errors.Select(e => e.Description)));
+
+            // Assign role to user
+            var roleResult = await _manager.AddToRoleAsync(user, role);
+            if (!roleResult.Succeeded)
+                throw new InvalidOperationException("User created but failed to assign role.");
+
+            return $"User {user.Email} created successfully and assigned to {role}.";
+        }
+
+        private async Task<string> CreateJwtToken(ApplicationUser user, string[] roles)
+        {
+
+            // Create Claims
+            var claims = new List<Claim>();
+
+            claims.Add(new Claim(ClaimTypes.Email, user.Email));
 
             foreach (var role in roles)
-                roleClaims.Add(new Claim("roles", role));
-
-            var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim("uid", user.Id)
+                claims.Add(new Claim(ClaimTypes.Role, role));
             }
-            .Union(userClaims)
-            .Union(roleClaims);
 
-            var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
-            var signingCredentials = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256);
-            var jwtSecurityToken = new JwtSecurityToken(
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
                 issuer: _jwt.Issuer,
                 audience: _jwt.Audience,
                 claims: claims,
-                expires: DateTime.Now.AddDays(_jwt.DurationInDays),
-                signingCredentials: signingCredentials);
+                expires: DateTime.UtcNow.AddDays(_jwt.DurationInDays),
+                signingCredentials: credentials
+            );
 
-            return new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         private string GenerateCode()
@@ -506,6 +573,5 @@ namespace MedicalSystemApi.Services.Implements
             Random random = new Random();
             return random.Next(10000000, 99999999).ToString(); // 🔹 رمز مكون من 8 أرقام
         }
-
     }
 }

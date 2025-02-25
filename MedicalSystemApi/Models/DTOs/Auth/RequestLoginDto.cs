@@ -15,7 +15,7 @@ namespace MedicalSystemApi.Models.DTOs.Auth
         [DataType(DataType.Password)]
         [MaxLength(64, ErrorMessage = "Password cannot exceed 64 characters.")]
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
-        [DefaultValue("SecurePass123!")]
+        [DefaultValue("SecurePass123")]
         public string Password { get; set; }
     }
 }

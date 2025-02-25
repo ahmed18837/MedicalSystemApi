@@ -1,5 +1,6 @@
 ﻿using MedicalSystemApi.Models.DTOs.Auth;
 using MedicalSystemApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
@@ -7,19 +8,20 @@ namespace MedicalSystemApi.Controllers
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
-
-    public class AppAdminController : ControllerBase
+    [Authorize(Roles = "SuperAdmin, Admin")]
+    public class AppAdminController(IAuthService authService) : ControllerBase
     {
-        private readonly IAuthService _authService;
-
-        public AppAdminController(IAuthService authService)
-        {
-            _authService = authService;
-        }
+        private readonly IAuthService _authService = authService;
 
         [HttpGet("GetUsers")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetUsers()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var users = await _authService.GetUsersAsync();
@@ -32,8 +34,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("GetUserByEmail/{email}")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetUserByEmail(string email)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var user = await _authService.GetUserByEmailAsync(email);
@@ -46,8 +54,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("GetUserById/{Id}")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetUserById(string Id)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var user = await _authService.GetUserByIdAsync(Id);
@@ -62,6 +76,11 @@ namespace MedicalSystemApi.Controllers
         [HttpPut("UpdateUser/{Id}")]
         public async Task<IActionResult> UpdateUser(string Id, [FromBody] UpdateUserDto model)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 await _authService.UpdateUserAsync(Id, model);
@@ -74,8 +93,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("GetAllRoles")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetAllRoles()
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var roles = await _authService.GetAllRolesAsync();
@@ -88,8 +113,14 @@ namespace MedicalSystemApi.Controllers
         }
 
         [HttpGet("GetUsersByRole/{roleName}")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
         public async Task<IActionResult> GetUsersByRole(string roleName)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 var users = await _authService.GetUsersByRoleAsync(roleName);
@@ -101,5 +132,24 @@ namespace MedicalSystemApi.Controllers
             }
         }
 
+        [HttpGet("GetRolesByEmail")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, NoStore = false)]
+        public async Task<IActionResult> GetRolesByEmail([FromQuery] string email)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var users = await _authService.GetRolesByEmailAsync(email);
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

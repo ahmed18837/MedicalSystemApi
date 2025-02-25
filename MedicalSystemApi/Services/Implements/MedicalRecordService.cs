@@ -6,23 +6,16 @@ using MedicalSystemApi.Services.Interfaces;
 
 namespace MedicalSystemApi.Services.Implements
 {
-    public class MedicalRecordService : IMedicalRecordService
+    public class MedicalRecordService(IMedicalRecordRepository medicalRecordRepository, IMapper mapper) : IMedicalRecordService
     {
-        private readonly IMedicalRecordRepository _medicalRecordRepository;
-        private readonly IMapper _mapper;
-
-        public MedicalRecordService(IMedicalRecordRepository medicalRecordRepository, IMapper mapper)
-        {
-            _medicalRecordRepository = medicalRecordRepository;
-            _mapper = mapper;
-        }
+        private readonly IMedicalRecordRepository _medicalRecordRepository = medicalRecordRepository;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<IEnumerable<MedicalRecordDto>> GetAllAsync()
         {
-            var medicalRecordList = await _medicalRecordRepository.GetAllWithDoctorName() ??
+            var medicalRecordListDto = await _medicalRecordRepository.GetAllWithDoctorName() ??
                 throw new Exception("There are not MedicationRecord!");
 
-            var medicalRecordListDto = _mapper.Map<IEnumerable<MedicalRecordDto>>(medicalRecordList); // ابطىء نسبيا ولكن سهل فى التعديل
             return medicalRecordListDto;
         }
 
@@ -30,10 +23,9 @@ namespace MedicalSystemApi.Services.Implements
         {
             if (id <= 0) throw new ArgumentException("Id must be greater than zero");
 
-            var medicalRecord = await _medicalRecordRepository.GetMedicalRecordWithDoctorName(id) ??
+            var medicalRecordDto = await _medicalRecordRepository.GetMedicalRecordWithDoctorName(id) ??
                 throw new InvalidOperationException("MedicationRecord not fount");
 
-            var medicalRecordDto = _mapper.Map<MedicalRecordDto>(medicalRecord);
             return medicalRecordDto;
         }
 
@@ -94,8 +86,6 @@ namespace MedicalSystemApi.Services.Implements
             await _medicalRecordRepository.UpdateDiagnosisAndPrescriptions(recordId, diagnosis, prescriptions);
         }
 
-
-
         public async Task<IEnumerable<MedicalRecordDto>> GetMedicalHistoryByPatientIdAndDoctorId(int patientId, int doctorId)
         {
             var history = await _medicalRecordRepository.GetMedicalHistoryByPatientIdAndDoctorId(patientId, doctorId);
@@ -104,6 +94,16 @@ namespace MedicalSystemApi.Services.Implements
                 throw new KeyNotFoundException($"No medical records found for patient ID {patientId} and doctor ID {doctorId}.");
             var historyDto = _mapper.Map<IEnumerable<MedicalRecordDto>>(history);
             return historyDto;
+        }
+
+        public async Task<IEnumerable<MedicalRecordDto>> GetFilteredMedicalRecordsAsync(MedicalRecordFilterDto filterDto)
+        {
+            var medicalRecordsDto = await _medicalRecordRepository.GetFilteredMedicalRecordsAsync(filterDto);
+
+            if (medicalRecordsDto == null && medicalRecordsDto.Any())
+                throw new Exception("No medicalRecords found matching the given criteria.");
+
+            return medicalRecordsDto;
         }
     }
 }

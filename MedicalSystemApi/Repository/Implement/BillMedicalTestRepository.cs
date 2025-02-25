@@ -1,35 +1,48 @@
 ﻿using MedicalSystemApi.Data;
+using MedicalSystemApi.Models.DTOs.BillMedicalTest;
 using MedicalSystemApi.Models.Entities;
 using MedicalSystemApi.Repository.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace MedicalSystemApi.Repository.Implement
 {
-    public class BillMedicalTestRepository : GenericRepository<BillMedicalTest>, IBillMedicalTestRepository
+    public class BillMedicalTestRepository(AppDbContext dbContext) : GenericRepository<BillMedicalTest>(dbContext), IBillMedicalTestRepository
     {
-        private readonly AppDbContext _dbContext;
-        public BillMedicalTestRepository(AppDbContext dbContext) : base(dbContext)
-        {
-            _dbContext = dbContext;
-        }
+        private readonly AppDbContext _dbContext = dbContext;
 
-        public async Task<IEnumerable<BillMedicalTest>> GetAllWithMedicalTestName()
+        public async Task<IEnumerable<BillMedicalTestDto>> GetAllWithMedicalTestName()
         {
             return await _dbContext.BillMedicalTests
-                //.AsNoTrackingWithIdentityResolution()
-                .AsNoTracking()
-                .Include(m => m.MedicalTest)
-                .ToListAsync();
+         .AsNoTrackingWithIdentityResolution()
+         .Select(bmt => new BillMedicalTestDto
+         {
+             BillId = bmt.BillId,
+             MedicalTestName = _dbContext.MedicalTests
+                 .Where(mt => mt.Id == bmt.MedicalTestId)
+                 .Select(mt => mt.TestName)
+                 .FirstOrDefault(),
+             TestCost = bmt.TestCost
+         })
+         .ToListAsync();
         }
 
-        public async Task<BillMedicalTest> GetOneWithMedicalTestName(int id)
+        public async Task<BillMedicalTestDto> GetOneWithMedicalTestName(int id)
         {
             return await _dbContext.BillMedicalTests
-           //.AsNoTrackingWithIdentityResolution()
-           .AsNoTracking()
-           .Include(m => m.MedicalTest)
-           .FirstOrDefaultAsync(s => s.Id == id);
+                .AsNoTracking() // ✅ تحسين الأداء بعدم تتبع الكيانات
+                .Where(bmt => bmt.Id == id)
+                .Select(bmt => new BillMedicalTestDto
+                {
+                    BillId = bmt.BillId,
+                    MedicalTestName = _dbContext.MedicalTests
+                        .Where(mt => mt.Id == bmt.MedicalTestId)
+                        .Select(mt => mt.TestName)
+                        .FirstOrDefault(),
+                    TestCost = bmt.TestCost
+                })
+                .FirstOrDefaultAsync();
         }
+
 
         public async Task<bool> MedicalTestExistsAsync(int medicalTestId)
         {
@@ -43,14 +56,23 @@ namespace MedicalSystemApi.Repository.Implement
                 .AnyAsync(d => d.Id == billId);
         }
 
-        public async Task<IEnumerable<BillMedicalTest>> GetTestsByBillIdAsync(int billId)
+        public async Task<IEnumerable<BillMedicalTestDto>> GetTestsByBillIdAsync(int billId)
         {
             return await _dbContext.BillMedicalTests
-            .Where(t => t.BillId == billId)
-            .AsNoTracking()
-            .Include(t => t.MedicalTest)
-            .ToListAsync();
+                .Where(t => t.BillId == billId)
+                .AsNoTracking()
+                .Select(t => new BillMedicalTestDto
+                {
+                    BillId = t.BillId,
+                    MedicalTestName = _dbContext.MedicalTests
+                        .Where(mt => mt.Id == t.MedicalTestId)
+                        .Select(mt => mt.TestName)
+                        .FirstOrDefault(),
+                    TestCost = t.TestCost
+                })
+                .ToListAsync();
         }
+
 
         public async Task<IEnumerable<Bill>> GetBillsByTestIdAsync(int testId)
         {
@@ -70,5 +92,37 @@ namespace MedicalSystemApi.Repository.Implement
             billMedicalTest.TestCost = newCost;
             return await _dbContext.SaveChangesAsync() > 0;
         }
+
+        public async Task<IEnumerable<BillMedicalTestDto>> GetFilteredBillMedicalTestsAsync(BillMedicalTestFilterDto filterDto)
+        {
+            var query = _dbContext.BillMedicalTests.AsQueryable();
+
+            // Filtering
+            if (filterDto.BillId.HasValue)
+                query = query.Where(bmt => bmt.BillId == filterDto.BillId.Value);
+
+            if (filterDto.MedicalTestId.HasValue)
+                query = query.Where(bmt => bmt.MedicalTestId == filterDto.MedicalTestId.Value);
+
+            if (filterDto.MinTestCost.HasValue)
+                query = query.Where(bmt => bmt.TestCost >= filterDto.MinTestCost.Value);
+
+            if (filterDto.MaxTestCost.HasValue)
+                query = query.Where(bmt => bmt.TestCost <= filterDto.MaxTestCost.Value);
+
+            return await query
+                .AsNoTracking()
+                .Select(bmt => new BillMedicalTestDto
+                {
+                    BillId = bmt.BillId,
+                    MedicalTestName = _dbContext.MedicalTests
+                        .Where(mt => mt.Id == bmt.MedicalTestId)
+                        .Select(mt => mt.TestName)
+                        .FirstOrDefault(),
+                    TestCost = bmt.TestCost
+                })
+                .ToListAsync();
+        }
+
     }
 }

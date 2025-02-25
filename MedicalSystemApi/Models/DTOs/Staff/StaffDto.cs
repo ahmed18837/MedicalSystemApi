@@ -2,7 +2,7 @@
 {
     public class StaffDto
     {
-        public int Id { get; set; }
+        //public int Id { get; set; }
         public string FullName { get; set; }
         public string RoleStaff { get; set; }
         public string Phone { get; set; }

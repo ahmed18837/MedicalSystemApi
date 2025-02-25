@@ -14,6 +14,7 @@ namespace MedicalSystemApi.Services.Interfaces
         Task<IEnumerable<MedicationDto>> GetMedicationsByDosageRangeAsync(string minDosage, string maxDosage);
         Task UpdateMedicationInstructionsAsync(int id, string instructions);
         Task<Dictionary<string, int>> GetMedicationStatisticsAsync();
-
+        // Filtering
+        Task<IEnumerable<MedicationDto>> GetFilteredMedicationsAsync(MedicationFilterDto filterDto);
     }
 }

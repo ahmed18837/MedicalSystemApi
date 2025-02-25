@@ -4,7 +4,7 @@ namespace MedicalSystemApi.Services.Interfaces
 {
     public interface IStaffService
     {
-        Task<IEnumerable<StaffDto>> GetAllAsync();
+        Task<IEnumerable<StaffDto>> GetAllWithDepartmentNameAsync();
         Task<StaffDto> GetByIdAsync(int id);
         Task AddAsync(CreateStaffDto createStaffDto);
         Task UpdateAsync(int id, UpdateStaffDto updateStaffDto);
@@ -17,5 +17,7 @@ namespace MedicalSystemApi.Services.Interfaces
         Task<int> GetYearsOfServiceAsync(int id);
         Task UpdateStaffRoleOrDepartmentAsync(UpdateStaffRoleOrDepartmentDto updateDto);
         Task UpdateStaffImageAsync(string staffId, IFormFile file);
+        // Filtering
+        Task<IEnumerable<StaffDto>> GetFilteredStaffAsync(StaffFilterDto filterDto);
     }
 }
