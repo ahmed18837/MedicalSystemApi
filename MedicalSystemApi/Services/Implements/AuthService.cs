@@ -15,18 +15,19 @@ using System.Text;
 
 namespace MedicalSystemApi.Services.Implements
 {
-    public class AuthService(IAuthRepository authRepository, UserManager<ApplicationUser> manager, SignInManager<ApplicationUser> signInManager
+    public class AuthService(IAuthRepository authRepository, UserManager<ApplicationUser> manager, IHttpContextAccessor httpContextAccessor
             , RoleManager<IdentityRole> roleManager
             , IMapper mapper, IOptions<JWT> jwt, IEmailService emailService) : IAuthService
     {
 
         private readonly UserManager<ApplicationUser> _manager = manager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
-        private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
         private readonly JWT _jwt = jwt.Value;
         private readonly IAuthRepository _authRepository = authRepository;
         private readonly IEmailService _emailService = emailService;
         private readonly IMapper _mapper = mapper;
+        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+
 
         public async Task<IdentityResult> RegisterAsync(RequestRegisterDto request)
         {
@@ -460,10 +461,6 @@ namespace MedicalSystemApi.Services.Implements
             }
         }
 
-        public async Task LogoutAsync()
-        {
-            await _signInManager.SignOutAsync();
-        }
 
         public async Task<IEnumerable<string>> GetRolesByEmailAsync(string email)
         {

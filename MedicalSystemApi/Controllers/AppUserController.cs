@@ -1,7 +1,5 @@
 ﻿using MedicalSystemApi.Models.DTOs.Auth;
-using MedicalSystemApi.Models.Entities;
 using MedicalSystemApi.Services.Interfaces;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicalSystemApi.Controllers
@@ -9,10 +7,9 @@ namespace MedicalSystemApi.Controllers
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
     [ApiVersion("1.0")]
-    public class AppUserController(IAuthService authService, SignInManager<ApplicationUser> signInManager) : ControllerBase
+    public class AppUserController(IAuthService authService) : ControllerBase
     {
         private readonly IAuthService _authService = authService;
-        private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
 
 
         [HttpPost("register")]

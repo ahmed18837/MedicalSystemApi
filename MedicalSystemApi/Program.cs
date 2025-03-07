@@ -103,7 +103,7 @@ builder.Services.AddSwaggerGen(options =>
         Name = "Authorization",
         Type = SecuritySchemeType.ApiKey,
         In = ParameterLocation.Header,
-        Description = "Enter the JWT token without 'Bearer'"
+        Description = "Enter 'Bearer' followed by your JWT token"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -215,6 +215,10 @@ app.UseSwaggerUI(c =>
 
     c.EnableDeepLinking();
 });
+app.UseCors(builder =>
+    builder.AllowAnyOrigin()
+           .AllowAnyMethod()
+           .AllowAnyHeader());
 
 app.UseStaticFiles(); // يسمح بعرض الصور من wwwroot
 app.UseHttpsRedirection();

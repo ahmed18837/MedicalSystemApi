@@ -678,7 +678,7 @@ namespace MedicalSystemApi.Migrations
                     b.HasOne("MedicalSystemApi.Models.Entities.Patient", "Patient")
                         .WithMany("Appointments")
                         .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.SetNull)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("MedicalSystemApi.Models.Entities.Staff", "Staff")

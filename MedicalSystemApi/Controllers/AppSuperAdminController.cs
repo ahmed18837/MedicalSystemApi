@@ -98,7 +98,7 @@ namespace MedicalSystemApi.Controllers
             try
             {
                 await _authService.AddRoleAsync(RoleName);
-                return Created();
+                return StatusCode(201);
             }
             catch (Exception ex)
             {

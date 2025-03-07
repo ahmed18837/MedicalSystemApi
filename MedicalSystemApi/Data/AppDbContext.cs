@@ -138,7 +138,7 @@ namespace MedicalSystemApi.Data
                 .HasMany(a => a.Appointments)
                 .WithOne(p => p.Patient)
                 .HasForeignKey(p => p.PatientId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Patient → MedicalRecords (Required)
             modelBuilder.Entity<Patient>()

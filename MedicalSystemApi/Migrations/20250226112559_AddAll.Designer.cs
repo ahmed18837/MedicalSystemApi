@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MedicalSystemApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250225065909_MakeDoctorIdNullableInAppointments")]
-    partial class MakeDoctorIdNullableInAppointments
+    [Migration("20250226112559_AddAll")]
+    partial class AddAll
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -681,7 +681,7 @@ namespace MedicalSystemApi.Migrations
                     b.HasOne("MedicalSystemApi.Models.Entities.Patient", "Patient")
                         .WithMany("Appointments")
                         .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.SetNull)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("MedicalSystemApi.Models.Entities.Staff", "Staff")
